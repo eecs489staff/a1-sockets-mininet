@@ -35,9 +35,9 @@ You will be using our VM image ([link here](https://drive.google.com/file/d/1G_V
 
 You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the provided VM above.
 
-```
-Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip.
-``` 
+
+> ***Hints*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip.
+
 ```
 Here are some possible trouble shooting methods for using shared folder. 
 1.  Click on the “Device” tab, then select “Insert Guest Additions CD image”
@@ -46,7 +46,7 @@ Here are some possible trouble shooting methods for using shared folder.
     After that you may observe an external disk mounted on the guest os (named sf_{your shared folder name} in my case). 
 2. https://askubuntu.com/questions/1181438/virtualbox-6-0-14-shared-folder-doesnt-appear-in-media
 3. https://gist.github.com/estorgio/1d679f962e8209f8a9232f7593683265
-4. https://www.youtube.com/watch?v=N4C5CeYfntE start from 3:06.
+4. https://www.youtube.com/watch?v=N4C5CeYfntE.
 ```
 ### Mininet Walkthrough
 

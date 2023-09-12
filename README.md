@@ -13,7 +13,7 @@
 * [Submission Instructions](#submission-instr)
 * [Autograder](#autograder)
 
-Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) if you have not done so yet. This is so that we can create a private repository for you to store your code and answers for this project.
+Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) before 5p.m on Tuesday, Sep.5th. This is so that we can create a private repository for you to store your code and answers for this project.
 
 ## Learning Outcomes
 

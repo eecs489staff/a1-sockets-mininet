@@ -1,6 +1,7 @@
 # Assignment 1: Sockets, Mininet, & Performance
+# This SPEC is Changing - Please do not start yet
 
-### Due: Sep 18, 2023, 11:59 PM
+### Due: Sep 18, 2024, 11:59 PM
 
 ## Overview
 

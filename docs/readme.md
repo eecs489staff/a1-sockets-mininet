@@ -1,19 +1,20 @@
 # Assignment 1: Sockets, Mininet, & Performance
+# This SPEC is Changing - Please do not start yet
 
-### Due: Sep 18, 2023, 11:59 PM
+### Due: Sep 18, 2024, 11:59 PM
 
 ## Overview
 
-`iPerf` is a common tool used to measure network bandwidth. You will write your own version of this tool in C/C++ using sockets. You will then use your tools to measure the performance of virtual networks in Mininet and explain how link characteristics and multiplexing impact performance.
+[`iPerf`](https://iperf.fr/) is a common tool used to measure network bandwidth. It functions as a speed test tool for TCP, UDP, and SCTP. In this assignment, you will write your own version of this tool in C/C++ using sockets. You will then use your tools to measure the performance of virtual networks in Mininet and explain how link characteristics and multiplexing impact performance.
 
-* [Part 1](#part1): Write `iPerfer`
-* [Part 2](#part2): Mininet Tutorial
+* [Part 1](#part1): Mininet Tutorial (Not Graded)
+* [Part 2](#part2): Write `iPerfer`
 * [Part 3](#part3): Measurements in Mininet
 * [Part 4](#part4): Create a Custom Topology
 * [Submission Instructions](#submission-instr)
 * [Autograder](#autograder)
 
-Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSdYfoGeP9YbMOsxFrOWM03YXNRArSppqQ3RqNKIp0fFHgyKbQ/viewform?usp=sf_link) if you have not done so yet. This is so that we can create a private repository for you to store your code and answers for this project.
+<!--- Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) before 5p.m on Tuesday, Sep.5th. This is so that we can create a private repository for you to store your code and answers for this project. --->
 
 ## Learning Outcomes
 
@@ -23,19 +24,62 @@ After completing this programming assignment, students should be able to:
 * Explain how latency and throughput are impacted by link characteristics and multiplexing
 
 <a name="part1"></a>
-## Part 1: Write `iPerfer`
+## Part 1: Mininet Tutorial (Not Graded)`
 
-For the first part of the assignment you will write your own version of `iPerf` to measure network bandwidth. Your tool, called `iPerfer`, will send and receive TCP packets between a pair of hosts using sockets.
+Before you write or test `iPerfer`, you will learn how to use Mininet to create virtual networks and run simple experiments. According to the [Mininet website](http://mininet.org/), *Mininet creates a realistic virtual network, running real kernel, switch and application code, on a single machine (VM or native), in seconds, with a single command.* We will use Mininet in programming assignments throughout the semester.
+
+### Running Mininet
+
+It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. If you don't have access to a linux machine, we will be using EC2 on AWS that will give you a linux environment with images that have Mininet pre-installed. Please following this <a href"link">tutorial </a> to start using AWS.
+
+<!---For the former, we will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
+
+You will be using our VM image ([link here](https://drive.google.com/file/d/1G_VOCKQlMsEfzo0xkAtwNJtWNEKA3Wfr/view?usp=drive_link)) with Mininet 2.3 pre-installed. Please download and import the VM image into VirtualBox. To transfer files to/from your VM you can use the Shared Folder feature provided in VirtualBox. We will go over this in more detail in discussion.
+--->
+You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the working with AWS.
+
+
+<!--- >> ***Hints:*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip. 
+
+
+> Here are some possible trouble shooting methods for using shared folder. 
+> 1.  Click on the “Device” tab, then select “Insert Guest Additions CD image”
+>     Also in the “Device” tab, add the target host folder to “Shared folders”.
+>     Restart the VM.
+>     After that you may observe an external disk mounted on the guest os (named sf_{your shared folder name} in my case). 
+> 2. https://askubuntu.com/questions/1181438/virtualbox-6-0-14-shared-folder-doesnt-appear-in-media
+> 3. https://gist.github.com/estorgio/1d679f962e8209f8a9232f7593683265
+> 4. https://www.youtube.com/watch?v=N4C5CeYfntE. --->
+
+### Mininet Walkthrough
+
+Once you have access to Mininet, you should complete the following sections of the standard [Mininet walkthrough](http://mininet.org/walkthrough/):
+
+* All of Part 1, except the section "Start Wireshark"
+* The first four sections of Part 2—"Run a Regression Test", "Changing Topology Size and Type", "Link variations", and "Adjustable Verbosity"
+* All of Part 3
+
+At some points, the walkthrough will talk about software-defined networking (SDN) and OpenFlow. We will discuss these during the second half of the semester, so you do not need to understand what they mean right now; you just need to know how to run and interact with Mininet. We will review using Mininet in discussion as well.
+
+> **NOTE:** You do not need to submit anything for this part of the assignment. This portion is meant to help your understanding for this and future assignments.
+
+
+<a name="part2"></a>
+## Part 2: Write `iPerfer`
+
+In this portion of the assignment, you will write your own version of `iPerf` to measure network bandwidth. Your tool, called `iPerfer`, will send and receive TCP packets between a pair of hosts using sockets.
 
 > **NOTE:** You may refer to [Beej's Guide to Network Programming Using Internet Sockets](https://beej.us/guide/bgnet/html/) for socket programming. Discussion sections will also review the some of the basics.
 
 When operating in client mode, `iPerfer` will send TCP packets to a specific host for a specified time window and track how much data was sent during that time frame; it will calculate and display the bandwidth based on how much data was sent in the elapsed time. When operating in server mode, `iPerfer` will receive TCP packets and track how much data was received during the lifetime of a connection; it will calculate and display the bandwidth based on how much data was received and how much time elapsed during the connection.
 
+> **NOTE:** When measuring time, we highly recommend using `std::chrono::high_resolution_clock` for checking and computing passed time. From here, you can cast the time into milliseconds for more accurate time keeping.
+
 ### Server Mode
 
 To operate `iPerfer` in server mode, it should be invoked as follows:
 
-`./iPerfer -s -p <listen_port>`
+`$ ./iPerfer -s -p <listen_port>`
 
 * `-s` indicates this is the `iPerfer` server which should consume data
 * `listen_port` is the port on which the host is waiting to consume data; the port should be in the range `1024 ≤ listen_port ≤ 65535`
@@ -44,11 +88,11 @@ To operate `iPerfer` in server mode, it should be invoked as follows:
 
 You can use the presence of the `-s` option to determine `iPerfer` should operate in server mode.
 
-If arguments are missing or extra arguments are provided, you should print the following and exit:
+If arguments are missing or extra arguments are provided, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
 `Error: missing or extra arguments`
 
-If the listen port argument is less than 1024 or greater than 65535, you should print the following and exit:
+If the listen port argument is less than 1024 or greater than 65535, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
 `Error: port number must be in the range of [1024, 65535]`
 
@@ -61,20 +105,20 @@ After the client has closed the connection, `iPerfer` server must print a one-li
 `Received=X KB, Rate=Y Mbps`
 
 where X stands for the total number of bytes received (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-Note X should be an integer and Y should be a decimal with three digits after the decimal mark.
+Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
 
 For example:
 `Received=6543 KB, Rate=5.234 Mbps`
 
 The `iPerfer` server should shut down gracefully after it handles one connection from a client.
 
-> **Note:** Please use setsockopt to allow reuse of the port number, this will make your life easier for testing and will allow you to pass the autograder, which runs the `iPerfer` server with the same port number each time. <- We recognize this isn't ideal, and will be fixed in the future.
+> **Note:** Please use `setsockopt` to allow reuse of the port number, this will make your life easier for testing and will allow you to pass the autograder, which runs the `iPerfer` server with the same port number each time. 
 
 ### Client Mode
 
 To operate `iPerfer` in client mode, it should be invoked as follows:
 
-`./iPerfer -c -h <server_hostname> -p <server_port> -t <time>`
+`$ ./iPerfer -c -h <server_hostname> -p <server_port> -t <time>`
 
 * `-c` indicates this is the `iPerfer` client which should generate data
 * `server_hostname` is the hostname or IP address of the `iPerfer` server which will consume data
@@ -85,15 +129,15 @@ To operate `iPerfer` in client mode, it should be invoked as follows:
 
 You can use the presence of the `-c` option to determine that `iPerfer` should operate in the client mode.
 
-If any arguments are missing or extra arguments are provided, you should print the following and exit:
+If any arguments are missing or extra arguments are provided, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
 `Error: missing or extra arguments`
 
-If the server port argument is less than 1024 or greater than 65535, you should print the following and exit:
+If the server port argument is less than 1024 or greater than 65535, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
 `Error: port number must be in the range of [1024, 65535]`
 
-If the time argument ends up parsing to less than 0, you should print the following and exit:
+If the time argument ends up parsing to less than or equal to 0, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
 `Error: time argument must be greater than 0`
 
@@ -106,14 +150,14 @@ When running as a client, `iPerfer` must establish a TCP connection with the ser
 `Sent=X KB, Rate=Y Mbps`
 
 where X stands for the total number of bytes sent (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-Note X should be an integer and Y should be a decimal with three digits after the decimal mark.
+Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
 
 For example:
 `Sent=6543 KB, Rate=5.234 Mbps`
 
 You should assume 1 kilobyte (KB) = 1000 bytes (B) and 1 megabyte (MB) = 1000 KB. As always, 1 byte (B) = 8 bits (b).
 
-> **NOTE:** When calculating the rate, do not use the `time` argument, rather measure the time elapsed from when the client first starts sending data to when it receives its acknowledgement message.
+> **NOTE:** When calculating the rate, **do not** use the `time` argument, rather measure the time elapsed from when the client first starts sending data to when it receives its acknowledgement message. Additionally, note that the throughput is in Kilobytes (KB) whereas the rate is in Megabits per second. (Mbps) Make sure your units are accurate to avoid losing points on the autograder.
 
 ### Testing
 
@@ -125,31 +169,6 @@ You should receive the same number of bytes on the server as you sent from the c
 
 The autograder will be released about halfway through the assignment. Instructions for submission are [here](#submission-instr). It is not meant to be your primary source of testing/debugging, but is rather intended for you to see your overall progress.
 
-<a name="part2"></a>
-## Part 2: Mininet Tutorial
-
-To test `iPerfer`, you will learn how to use Mininet to create virtual networks and run simple experiments. According to the [Mininet website](http://mininet.org/), *Mininet creates a realistic virtual network, running real kernel, switch and application code, on a single machine (VM or native), in seconds, with a single command.* We will use Mininet in programming assignments throughout the semester.
-
-### Running Mininet
-
-It is best advised to run Mininet in a virtual machine (VM). We will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
-
-You will be using our VM image ([link here](https://www.dropbox.com/s/r5mi9bv4iqjsn3o/EECS489VM-A1-1804-v3.ova?dl=0)) with Mininet 2.3 pre-installed. Please download and import the VM image into VirtualBox. To transfer files to/from your VM you can use the Shared Folder feature provided in VirtualBox. We will go over this in more detail in discussion.
-
-You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the provided VM above.
-
-### Mininet Walkthrough
-
-Once you have a Mininet VM, you should complete the following sections of the standard [Mininet walkthrough](http://mininet.org/walkthrough/):
-
-* All of Part 1, except the section "Start Wireshark"
-* The first four sections of Part 2—"Run a Regression Test", "Changing Topology Size and Type", "Link variations", and "Adjustable Verbosity"
-* All of Part 3
-
-At some points, the walkthrough will talk about software-defined networking (SDN) and OpenFlow. We will discuss these during the second half of the semester, so you do not need to understand what they mean right now; you just need to know how to run and interact with Mininet. We will review using mininet in discussion as well.
-
-> You do not need to submit anything for this part of the assignment.
-
 <a name="part3"></a>
 ## Part 3: Measurements in Mininet
 
@@ -157,7 +176,7 @@ For the third part of the assignment you will use the tool you wrote (`iPerfer`)
 
 Read the `ping` man page to learn how to use it.
 
-A python script to run Mininet with the topology described below is provided [here](https://github.com/mosharaf/eecs489/tree/f21/Assignments/Assignment-1/starter_code) along with other files that you will find useful in completing this assignment.
+A python script to run Mininet with the topology described below is provided [here](https://github.com/eecs489staff/a1-sockets-mininet/tree/main/starter_code) along with other files that you will find useful in completing this assignment.
 
 To run Mininet with the provided topology, run the Python script `assignment1_topology.py` using sudo:
 
@@ -167,7 +186,7 @@ This will create a network with the following topology:
 
 <img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in assignment1_topology.py" width="350" height="220"/>
 
-If you have trouble launching the script, a common fix is to first try running `sudo mn -c`, and then try launching the script again.
+If you have trouble launching the script, a common fix is to first try running `sudo mn -c`, and then try launching the script again. This will clear anything on Mininet at that point.
 
 Hosts (`h1` to `h10`) are represented by squares and switches (`s1` to `s6`) are represented by circles; the names in the diagram match the names of hosts and switches in Mininet. The hosts are assigned IP addresses 10.0.0.1 through 10.0.0.10; the last number in the IP address matches the host number.
 
@@ -195,22 +214,24 @@ Lastly, assume `h1` wants to communicate with `h10` at the same time `h3` wants 
 
 Use `ping` and `iPerfer` to conduct measurements, storing the output in files called `latency_h1-h10.txt`, `latency_h3-h8.txt`, `throughput_h1-h10.txt`, and `throughput_h3-h8.txt`. Put the average RTT and measured throughput in your `answers.txt` file and explain the results. If your prediction was wrong, explain why.
 
+> **NOTE:** For the latency portions of `answers.txt`, make sure you are calculating the RTT for them. (The tools should report the RTT, as well)
+
 <a name="part4"></a>
 ## Part 4: Create a Custom Topology
 For the last part of this assignment, write a python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. Save your python script as `<uniqname>_topology.py`. You might find looking into the source code for `assignment1_topology.py` particularly helpful.
 
-Finally, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts) and save it as `<uniqname>_topology.png`.
+Finally, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts) and save it as `<uniqname>_topology.png`. You may use any program or sketch to do this part. (We recommend [draw.io](https://app.diagrams.net/))
 
 <a name="submission-instr"></a>
 ## Submission Instructions
-Submission to the autograder will be done [here](https://eecs489.eecs.umich.edu/). It will be released about halfway through the assignment.
+Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). It will be released about halfway through the assignment.
 
 To submit:
-1. `git push` your work to the github repository we provided for the assignment.
-2. Go to autograder website specified above. You can specify what branch on your repository you want us to grade.
-3. Press submit. We will email your results once the autograder is finished.
+1. Make sure all the files you want to submit are in the same folder and you are able to compile your code with this flat file structure.
+2. Go to autograder website specified above and submit you files. Ignore any errors about missing .c files.
+3. Please provide a Makefile that will produce an `iPerfer` executable when run with the command `make iperfer`.
 
-Your assigned repository must contain:
+<!---Your assigned repository must contain:
 
 * The source code for `iPerfer`: all source files for `iPerfer` should be in a folder called `iPerfer`; the folder should include a `Makefile` to compile the sources. The autograder expects an `iPerfer` executable to be present after running `make` in this directory. The autograder will run `make clean` then `make` (must support both), if either do not work the submission will fail.
 * Your measurement results and answers to the questions from Part 3: all results and a text file called `answers.txt` should be in a folder called `measurements`.
@@ -251,7 +272,7 @@ $ tree ./p1-joebb/
 
 
 When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
-
+--->
 <a name="autograder"></a>
 ## Autograder
 
@@ -262,7 +283,7 @@ The autograder tests the following aspects of `iPerfer`
 
 Because of the guarantees of TCP, both Sent and Received should be the same. The `Rate` is tested by first running `iperf` over a link, then comparing your `iPerfer` output to the result given a reasonable margin of error.
 
-Our autograder runs the following versions of gcc/g++, please make sure your code is compatible
+<!---Our autograder runs the following versions of gcc/g++, please make sure your code is compatible
 ```
 $ gcc --version
 gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
@@ -276,6 +297,6 @@ Copyright (C) 2017 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
-
+--->
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks.

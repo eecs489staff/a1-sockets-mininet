@@ -14,7 +14,7 @@
 * [Submission Instructions](#submission-instr)
 * [Autograder](#autograder)
 
-Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) before 5p.m on Tuesday, Sep.5th. This is so that we can create a private repository for you to store your code and answers for this project.
+<!--- Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) before 5p.m on Tuesday, Sep.5th. This is so that we can create a private repository for you to store your code and answers for this project. --->
 
 ## Learning Outcomes
 
@@ -30,14 +30,16 @@ Before you write or test `iPerfer`, you will learn how to use Mininet to create 
 
 ### Running Mininet
 
-It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. For the former, we will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
+It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. If you don't have access to a linux machine, we will be using EC2 on AWS that will give you a linux environment with images that have Mininet pre-installed. Please following this <a href"link">tutorial </a> to start using AWS.
+
+<!---For the former, we will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
 
 You will be using our VM image ([link here](https://drive.google.com/file/d/1G_VOCKQlMsEfzo0xkAtwNJtWNEKA3Wfr/view?usp=drive_link)) with Mininet 2.3 pre-installed. Please download and import the VM image into VirtualBox. To transfer files to/from your VM you can use the Shared Folder feature provided in VirtualBox. We will go over this in more detail in discussion.
+--->
+You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the working with AWS.
 
-You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the provided VM above.
 
-
-> ***Hints:*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip.
+<!--- >> ***Hints:*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip. 
 
 
 > Here are some possible trouble shooting methods for using shared folder. 
@@ -47,11 +49,11 @@ You are welcome to try to set up your own testing environment using the methods 
 >     After that you may observe an external disk mounted on the guest os (named sf_{your shared folder name} in my case). 
 > 2. https://askubuntu.com/questions/1181438/virtualbox-6-0-14-shared-folder-doesnt-appear-in-media
 > 3. https://gist.github.com/estorgio/1d679f962e8209f8a9232f7593683265
-> 4. https://www.youtube.com/watch?v=N4C5CeYfntE.
+> 4. https://www.youtube.com/watch?v=N4C5CeYfntE. --->
 
 ### Mininet Walkthrough
 
-Once you have a Mininet VM, you should complete the following sections of the standard [Mininet walkthrough](http://mininet.org/walkthrough/):
+Once you have access to Mininet, you should complete the following sections of the standard [Mininet walkthrough](http://mininet.org/walkthrough/):
 
 * All of Part 1, except the section "Start Wireshark"
 * The first four sections of Part 2—"Run a Regression Test", "Changing Topology Size and Type", "Link variations", and "Adjustable Verbosity"
@@ -110,7 +112,7 @@ For example:
 
 The `iPerfer` server should shut down gracefully after it handles one connection from a client.
 
-> **Note:** Please use `setsockopt` to allow reuse of the port number, this will make your life easier for testing and will allow you to pass the autograder, which runs the `iPerfer` server with the same port number each time. <- We recognize this isn't ideal, and will be fixed in the future.
+> **Note:** Please use `setsockopt` to allow reuse of the port number, this will make your life easier for testing and will allow you to pass the autograder, which runs the `iPerfer` server with the same port number each time. 
 
 ### Client Mode
 
@@ -222,14 +224,14 @@ Finally, create a visualization of your custom topology (using circles to denote
 
 <a name="submission-instr"></a>
 ## Submission Instructions
-Submission to the autograder will be done [here](https://eecs489.eecs.umich.edu/). It will be released about halfway through the assignment.
+Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). It will be released about halfway through the assignment.
 
 To submit:
-1. `git push` your work to the github repository we provided for the assignment.
-2. Go to autograder website specified above. You can specify what branch on your repository you want us to grade.
-3. Press submit. We will email your results once the autograder is finished.
+1. Make sure all the files you want to submit are in the same folder and you are able to compile your code with this flat file structure.
+2. Go to autograder website specified above and submit you files. Ignore any errors about missing .c files.
+3. Please provide a Makefile that will produce an `iPerfer` executable when run with the command `make iperfer`.
 
-Your assigned repository must contain:
+<!---Your assigned repository must contain:
 
 * The source code for `iPerfer`: all source files for `iPerfer` should be in a folder called `iPerfer`; the folder should include a `Makefile` to compile the sources. The autograder expects an `iPerfer` executable to be present after running `make` in this directory. The autograder will run `make clean` then `make` (must support both), if either do not work the submission will fail.
 * Your measurement results and answers to the questions from Part 3: all results and a text file called `answers.txt` should be in a folder called `measurements`.
@@ -270,7 +272,7 @@ $ tree ./p1-joebb/
 
 
 When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
-
+--->
 <a name="autograder"></a>
 ## Autograder
 
@@ -281,7 +283,7 @@ The autograder tests the following aspects of `iPerfer`
 
 Because of the guarantees of TCP, both Sent and Received should be the same. The `Rate` is tested by first running `iperf` over a link, then comparing your `iPerfer` output to the result given a reasonable margin of error.
 
-Our autograder runs the following versions of gcc/g++, please make sure your code is compatible
+<!---Our autograder runs the following versions of gcc/g++, please make sure your code is compatible
 ```
 $ gcc --version
 gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
@@ -295,6 +297,6 @@ Copyright (C) 2017 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
-
+--->
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks.

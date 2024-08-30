@@ -1,7 +1,10 @@
 # Assignment 1: Sockets, Mininet, & Performance
-# This SPEC is Changing - Please do not start yet
 
 ### Due: Sep 18, 2024, 11:59 PM
+
+## AWS Setup 
+**IMPORTANT**: On the AMI section, don't select Ubuntu, select `EECS489P1` instead.   
+Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) if you haven't done so. 
 
 ## Overview
 
@@ -96,7 +99,7 @@ If the listen port argument is less than 1024 or greater than 65535, you should 
 
 `Error: port number must be in the range of [1024, 65535]`
 
-When running as a server, `iPerfer` must listen for TCP connections from a client and receive data as quickly as possible. It should then wait for some kind of message from the client indicating it is done sending data (we will call this a FIN message). The server should then send the client an acknowledgement to this FIN message. It is up to you to decide the format of these FIN and acknowledgement messages.
+When running as a server, `iPerfer` must listen for TCP connections from a client and receive data as quickly as possible. It should then wait for some kind of message from the client indicating it is done sending data (we will call this a **FIN** message). The server should then send the client an **acknowledgement** to this FIN message. It is up to you to decide the format of these FIN and acknowledgement messages.
 
 Data should be read in chunks of 1000 bytes. Keep a running total of the number of bytes received.
 
@@ -105,7 +108,7 @@ After the client has closed the connection, `iPerfer` server must print a one-li
 `Received=X KB, Rate=Y Mbps`
 
 where X stands for the total number of bytes received (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
+Note X should be an integer and Y should be a decimal with **three digits** after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
 
 For example:
 `Received=6543 KB, Rate=5.234 Mbps`
@@ -143,7 +146,7 @@ If the time argument ends up parsing to less than or equal to 0, you should prin
 
 If both the port and time argument are invalid, print only the port error message.
 
-When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible for `time` seconds. Data should be sent in chunks of 1000 bytes and the data should be all zeros. Keep a running total of the number of bytes sent. After the client finishes sending its data, it should send a FIN message and wait for an acknowledgement before exiting the program.
+When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible(just use a loop) for `time` seconds(hint: use `std::chrono::high_resolution_clock` or `time.h`). Data should be sent in chunks of 1000 bytes and the data should be all zeros(note: this is the char `'\0'`(0), not the char `'0'`(48)). Keep a running total of the number of bytes sent. After the client finishes sending its data, it should send a FIN message and wait for an acknowledgement before exiting the program. (hint: if your client/server is stuck here, try `shutdown(sockfd,SHUT_WR);`(no more transmission) after client finishes sending FIN) 
 
 `iPerfer` client must print a one-line summary in the following format:
 
@@ -218,7 +221,7 @@ Use `ping` and `iPerfer` to conduct measurements, storing the output in files ca
 
 <a name="part4"></a>
 ## Part 4: Create a Custom Topology
-For the last part of this assignment, write a python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. Save your python script as `<uniqname>_topology.py`. You might find looking into the source code for `assignment1_topology.py` particularly helpful.
+For the last part of this assignment, write a python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. Save your python script as `<uniqname>_topology.py`. You might find looking into the source code for `assignment1_topology.py` particularly helpful. (Note: You will need a script that creates topologies for later homeworks) 
 
 Finally, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts) and save it as `<uniqname>_topology.png`. You may use any program or sketch to do this part. (We recommend [draw.io](https://app.diagrams.net/))
 

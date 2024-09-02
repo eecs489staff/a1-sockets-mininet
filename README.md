@@ -183,7 +183,7 @@ A python script to run Mininet with the topology described below is provided [he
 
 To run Mininet with the provided topology, run the Python script `assignment1_topology.py` using sudo:
 
-`sudo python assignment1_topology.py`
+`sudo python3 assignment1_topology.py`
 
 This will create a network with the following topology:
 

@@ -3,17 +3,22 @@
 ### Due: Sep 18, 2024, 11:59 PM
 
 ## AWS Setup 
-**Note**: On the AMI section, don't select Ubuntu, select `EECS489P1` instead.   
-### **IMPORTANT**: Please make sure you are able to SSH into your AWS EC2 instance + your have the EECS489P1 AMI before proceeding!!!
-Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) if you haven't done so.
+Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) to set up your EC2 instance for P1. Make sure you select the correct AMI (`EECS489P1`) instead of Ubuntu.   
 
-## Testing your code on AWS 
-There are 2 choices: 
-1. Write your code on your local machine and use `rsync` to upload files to your EC2 instance.
-2. Use Remote SSH in VSCode and develop inside of the EC2 instance.
-Notice that you must have both the server and client working in order to test it. 
+## Development Tips
+There are a few choices for how to develop and test code for this project:
+1. You may write code on your local machine and use `rsync` to upload files to your EC2 instance. 
+2. You may SSH into your EC2 instance and develop using your favorite terminal-based editor. 
+3. You can SSH into your EC2 instance using VSCode, developing in a remote VSCode session. [Here](https://code.visualstudio.com/docs/remote/ssh) is a helpful guide on SSH-ing through VSCode. Your VSCode SSH config
+file will probably look something like this:
+```
+Host [ec2-instance].compute-1.amazonaws.com
+  HostName [ec2-instance].compute-1.amazonaws.com
+  User ubuntu
+  IdentityFile "[rooted path to your .pem file]"
+```
 
-## Concepts  
+## Glossary  
 - File Descriptor(fd): An fd is an integer that represents an opened "file", except that the "file" here refers to the generic interface to IO(read/write data). 
 - Socket: Abstraction of a connection between 2 machines. This is an fd you use in your code to refer to the connection. You pass this fd to various functions to work with the socket.
 - Mininet: A simulated network with hosts, routers(switches), links, controllers. You will always work inside of the Mininet. 
@@ -33,7 +38,7 @@ Notice that you must have both the server and client working in order to test it
 - Learn about socket programming: Learning how to send/receive data to/from other machines with sockets. You will do this for all later projects.
 - Get used to AWS: You will be developing and testing your code on remote machines for later projects. 
 - Get used to Mininet: Learning basic things like how to enter a host, how to start the mininet with topology, etc.
-- Learn to measure basic properties of network: Throughput and latency are important concepts you will need in measuring performance. Also learn to read a topology. 
+- Learn to measure basic properties of a network: Throughput and latency are important concepts you will need in measuring performance. Also learn to read a topology. 
 
 ## Overview
 
@@ -97,6 +102,35 @@ At some points, the walkthrough will talk about software-defined networking (SDN
 
 > **NOTE:** You do not need to submit anything for this part of the assignment. This portion is meant to help your understanding for this and future assignments.
 
+### Note: Running Multiple Hosts at Once in Mininet
+
+Over the course of this assignment (and especially in Part 3) you may want to run 
+programs in multiple hosts at once using mininet (e.g. to run a client in one
+host and a server in another). Typically, if you had access to a display for the
+EC2 instance, you could simply start different terminals for each host in Mininet
+(through something like `xterm h1`). However, SSH-ing into EC2 creates some 
+limitations. The following shell tips may be useful:
+
+- Use `>` to redirect output to a file. The following code will print the results
+  of pinging h2 from h1 into `ping_h1_h2.txt`. 
+  ```
+  $ h1 ping -c 5 10.0.0.2 > ping_h1_h2.txt
+  ```
+- Use `&` to run a process in a non-blocking way by spawning a new thread in the
+  background. The following code will do the exact same thing as the code above, 
+  except you will be able to run another command while the first one is running.
+  ```
+  $ h1 ping -c 5 10.0.0.2 > ping_h1_h2.txt &
+  ``` 
+- Using `&` will typically cause the PID (process ID) of the background process
+  to be printed out. You can kill the process using this PID to make it stop 
+  using the following command:
+  ```
+  kill -9 [PID]
+  ```
+
+Through these tips, you can run code in multiple hosts at once by sending
+processes to the background and redirecting output to appropriate files. 
 
 <a name="part2"></a>
 ## Part 2: Write `iPerfer`
@@ -226,24 +260,43 @@ Hosts (`h1` to `h10`) are represented by squares and switches (`s1` to `s6`) are
 
 > **NOTE:** When running ping and `iPerfer` in Mininet, you must use IP addresses, not hostnames. Also, if you are not confident your `iPerfer` is working correctly, feel free to use `iperf` for any throughput measurements noted below. Output using either program will be accepted.
 
-#### Q1: Link Latency and Throughput
+### (Optional) Using the Mininet Python API instead of Command Line Interface (CLI) 
+For the following questions, you may find it easier to use the Mininet Python
+API to do measurements instead of typing commands in through the CLI, which can
+be clunky and error-prone. This is certainly not required, but may make your
+life easier. 
+
+Here are a few links to supplement your understanding of the Mininet Python API:
+- https://github.com/mininet/mininet/wiki/Introduction-to-Mininet#running
+- https://mininet.org/api/classmininet_1_1net_1_1Mininet.html
+- https://mininet.org/walkthrough/#part-4-python-api-examples 
+
+A good starting point is to open up `assignment1_topology.py`. In the `main`
+function, after `net.start()`, you can input the following lines of code:
+```
+h1 = net.get('h1')
+h1.cmd('ping -c 5 10.0.0.2 > latency.txt')
+```
+Try it out and see what happens!
+
+### Q1: Link Latency and Throughput
 First, you should measure the RTT and bandwidth of each of the five individual links between switches (`L1` - `L5`). You should run ping with 20 packets and store the output of the measurement on each link in a file called `latency_L#.txt`, replacing # with the link number from the topology diagram above. You should run `iPerfer` for 20 seconds and store the output of the measurement on each link in a file called `throughput_L#.txt`, replacing # with the link number from the topology diagram above.
 
-#### Q2: Path Latency and Throughput
+### Q2: Path Latency and Throughput
 Now, assume `h1` wants to communicate with `h10`. What is the expected latency and throughput of the path between the hosts? Put your prediction in the `answers.txt` file under question 2.
 
 Measure the latency and throughput between `h1` and `h10` using `ping` and `iPerfer`. It does not matter which host is the client and which is the server. Use the same parameters as above (20 packets / 20 seconds) and store the output in files called `latency_Q2.txt` and `throughput_Q2.txt`. Put the average RTT and measured throughput in the `answers.txt` file and explain the results. If your prediction was wrong, explain why.
 
-#### Q3: Effects of Multiplexing
+### Q3: Effects of Multiplexing
 Next, assume multiple hosts connected to `s1` want to simultaneously talk to hosts connected to `s6`. What is the expected latency and throughput when two pairs of hosts are communicating simultaneously? Put your predictions in your `answers.txt` file under question 3.1.
 
 Use `ping` and `iPerfer` to measure the latency and throughput when there are two pairs of hosts communicating simultaneously; it does not matter which pairs of hosts are communicating as long as one is connected to `s1` and one is connected to `s6`. Use the same parameters as above. You do not need to submit the raw output, but you should put the average RTT and measured throughput for each pair in your `answers.txt` file under question 3.1 and explain the results. If your prediction was wrong, explain why.
 
-Repeat for three pairs of hosts communicating simultaneously and put your answers in `answers.txt` under question 3.2.
+Repeat for three pairs of hosts communicating simultaneously and put your answers in `answers.txt` under question 3.2. 
 
-Do not worry too much about starting the clients at the exact same time. So long as the connections overlap significantly, you should achieve the correct results. One simple way is to open up terminals for each of the hosts you will use, start the iPerfer servers, type in the iPerfer client command on each of the client hosts without hitting ENTER, and then quickly hit ENTER on all client hosts so that they start at roughly the same time.
+Do not worry too much about starting the clients at the exact same time. As long as the connections overlap significantly, you should achieve the correct results. You can achieve approximately simultaneous testing while using iPerfer by starting the servers first (in the background), and having client commands prepared that you can paste quickly into your terminal. 
 
-#### Q4: Effects of Latency
+### Q4: Effects of Latency
 Lastly, assume `h1` wants to communicate with `h10` at the same time `h3` wants to communicate with `h8`. What is the expected latency and throughput for each pair? Put your prediction in your `answers.txt` file under question 4.
 
 Use `ping` and `iPerfer` to conduct measurements, storing the output in files called `latency_h1-h10.txt`, `latency_h3-h8.txt`, `throughput_h1-h10.txt`, and `throughput_h3-h8.txt`. Put the average RTT and measured throughput in your `answers.txt` file and explain the results. If your prediction was wrong, explain why.
@@ -258,10 +311,10 @@ Finally, create a visualization of your custom topology (using circles to denote
 
 <a name="submission-instr"></a>
 ## Submission Instructions
-Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). It will be released about halfway through the assignment.
+Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). 
 
 To submit:
-1. Make sure all the files you want to submit are in the same folder and you are able to compile your code with this flat file structure.
+1. Make sure all the files you want to submit are in the same folder and you are able to compile your code with this flat file structure. **This includes the hand-graded files for Part 3 and Part 4 of the project.** 
 2. Go to autograder website specified above and submit you files. Ignore any errors about missing .c files.
 3. Please provide a Makefile that will produce an `iPerfer` executable when run with the command `make iperfer`.
 
@@ -308,23 +361,6 @@ $ tree ./p1-joebb/
 When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
 --->
 <a name="autograder"></a>
-## Troubleshooting 
-You can check the correctness of your code by comparing the throughput result against your predicted bandwidth in Part 3. They should be similar. If not, then either the predicted value or your code is wrong. 
-
-Common mistakes: 
-- Using negative value for `ssize_t`
-- Not setting precision to 3 for throughput
-- Extra/lacking new lines or white spaces in your print statement
-- Debug output in your print statement
-- Not sending FIN/ACK
-- Counting FIN/ACK into throughput
-- Using the wrong char for the sent data
-- Not closing the sockets
-- Using the wrong timing method
-- Incorrect command line argument error priority
-- Reusing the same port while last server is still running
-- Only testing code on local machine 
-
 ## Autograder
 
 The autograder tests the following aspects of `iPerfer`

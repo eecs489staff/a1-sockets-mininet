@@ -3,8 +3,37 @@
 ### Due: Sep 18, 2024, 11:59 PM
 
 ## AWS Setup 
-**IMPORTANT**: On the AMI section, don't select Ubuntu, select `EECS489P1` instead.   
-Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) if you haven't done so. 
+**Note**: On the AMI section, don't select Ubuntu, select `EECS489P1` instead.   
+### **IMPORTANT**: Please make sure you are able to SSH into your AWS EC2 instance + your have the EECS489P1 AMI before proceeding!!!
+Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) if you haven't done so.
+
+## Testing your code on AWS 
+There are 2 choices: 
+1. Write your code on your local machine and use `rsync` to upload files to your EC2 instance.
+2. Use Remote SSH in VSCode and develop inside of the EC2 instance.
+Notice that you must have both the server and client working in order to test it. 
+
+## Concepts  
+- File Descriptor(fd): An fd is an integer that represents an opened "file", except that the "file" here refers to the generic interface to IO(read/write data). 
+- Socket: Abstraction of a connection between 2 machines. This is an fd you use in your code to refer to the connection. You pass this fd to various functions to work with the socket.
+- Mininet: A simulated network with hosts, routers(switches), links, controllers. You will always work inside of the Mininet. 
+- Topology: The graph structure of the network.
+- Node: The nodes in the topology.
+- Link: The edges in the topology.
+- Path: The path consists of links to go from 1 node to another. 
+- Link bandwidth: A link's bandwidth means how many maximum data(bits) it can transfer per time period(s). This is a fixed number given in the topology. 
+- Link latency: A link's latency means how long does it take for 1 bit to go from 1 node to another. This is a fixed number given in the topology. 
+- Throughput: A measured value representing how many data you transferred over a fixed time period. This is not a fixed number and is measured.
+- Host(Mininet): Think of this like a computer with its own IP address, ethernet address, etc. All the mininet hosts share the same file system with the base machine, meaning you don't have to worry about copying files to the hosts.
+- Server: In the context of this project, the server is a mininet host you run iPerfer in server mode and listen to any connections.
+- Client: In the context of this project, the client is a mininet host you run iPerfer in client mode and connects to the server. 
+
+
+## Objective
+- Learn about socket programming: Learning how to send/receive data to/from other machines with sockets. You will do this for all later projects.
+- Get used to AWS: You will be developing and testing your code on remote machines for later projects. 
+- Get used to Mininet: Learning basic things like how to enter a host, how to start the mininet with topology, etc.
+- Learn to measure basic properties of network: Throughput and latency are important concepts you will need in measuring performance. Also learn to read a topology. 
 
 ## Overview
 
@@ -63,6 +92,8 @@ Once you have access to Mininet, you should complete the following sections of t
 * All of Part 3
 
 At some points, the walkthrough will talk about software-defined networking (SDN) and OpenFlow. We will discuss these during the second half of the semester, so you do not need to understand what they mean right now; you just need to know how to run and interact with Mininet. We will review using Mininet in discussion as well.
+
+### Please check out [this post](https://edstem.org/us/courses/61627/discussion/5197510) on tips of using mininet. 
 
 > **NOTE:** You do not need to submit anything for this part of the assignment. This portion is meant to help your understanding for this and future assignments.
 
@@ -277,6 +308,23 @@ $ tree ./p1-joebb/
 When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
 --->
 <a name="autograder"></a>
+## Troubleshooting 
+You can check the correctness of your code by comparing the throughput result against your predicted bandwidth in Part 3. They should be similar. If not, then either the predicted value or your code is wrong. 
+
+Common mistakes: 
+- Using negative value for `ssize_t`
+- Not setting precision to 3 for throughput
+- Extra/lacking new lines or white spaces in your print statement
+- Debug output in your print statement
+- Not sending FIN/ACK
+- Counting FIN/ACK into throughput
+- Using the wrong char for the sent data
+- Not closing the sockets
+- Using the wrong timing method
+- Incorrect command line argument error priority
+- Reusing the same port while last server is still running
+- Only testing code on local machine 
+
 ## Autograder
 
 The autograder tests the following aspects of `iPerfer`

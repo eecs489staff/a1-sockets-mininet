@@ -7,6 +7,7 @@ Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.
 
 ## Development Tips
 There are a few choices for how to develop and test code for this project:
+
 0. For C++, the AG is using C++ 17. Please ensure you are not using any features from C++ 20 or later.
 1. You may write code on your local machine and use `rsync` to upload files to your EC2 instance. 
 2. You may SSH into your EC2 instance and develop using your favorite terminal-based editor. 

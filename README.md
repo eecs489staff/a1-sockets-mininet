@@ -12,6 +12,8 @@ We have decided not to prescribe a certain virtual machine for you to use; you m
 
 *For clarity, Docker is not a VM software and will not work for this project.*
 
+**At this point in the spec, follow the instructions in `489 VM Setup.pdf` to set up your virtual machine.**
+
 ## Development Tips
 There are a few choices for how to develop and test code for this project:
 
@@ -82,14 +84,12 @@ Before you write or test `iPerfer`, you will learn how to use Mininet to create 
 
 ### Running Mininet
 
-It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. If you don't have access to a linux machine, we will be using EC2 on AWS that will give you a linux environment with images that have Mininet pre-installed. Please following this <a href"link">tutorial </a> to start using AWS.
+It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. 
 
 <!---For the former, we will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
 
 You will be using our VM image ([link here](https://drive.google.com/file/d/1G_VOCKQlMsEfzo0xkAtwNJtWNEKA3Wfr/view?usp=drive_link)) with Mininet 2.3 pre-installed. Please download and import the VM image into VirtualBox. To transfer files to/from your VM you can use the Shared Folder feature provided in VirtualBox. We will go over this in more detail in discussion.
 --->
-You are welcome to try to set up your own testing environment using the methods outlined in options 2 and 3 [here](http://mininet.org/download/#option-2-native-installation-from-source), however we will only officially be supporting the working with AWS.
-
 
 <!--- >> ***Hints:*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip. 
 

@@ -2,47 +2,59 @@
 
 ### Due: Sep 18, 2024, 11:59 PM
 
-## AWS Setup 
-Follow [this guide](https://www.eecs489.org/Project%201%20-%20Getting%20Started.pdf) to set up your EC2 instance for P1. Make sure you select the correct AMI (`EECS489P1`) instead of Ubuntu.   
+## Setting Up Your VM
+
+For Projects 1 and 4, you will be using a virtual machine (VM) running Ubuntu Server 24.04. This is because we will be using Mininet (more about this later) to simulate different network topologies. In order to use Mininet, we need certain kernel features, which makes running a virtual machine a necessity.
+
+### Finding a VM Software
+
+We have decided not to prescribe a certain virtual machine for you to use; you may use any VM of your choice. However, in our own experiences, we have found offerings by VMWare to work well. VMWare Workstation (for Windows) and VMWare Fusion Player (for both x86 and ARM Mac) are free for personal use and have worked well for us. However, you need not use them if you have other preferences.
+
+*For clarity, Docker is not a VM software and will not work for this project.*
 
 ## Development Tips
 There are a few choices for how to develop and test code for this project:
 
-0. For C++, the AG is using C++ 17. Please ensure you are not using any features from C++ 20 or later.
-1. You may write code on your local machine and use `rsync` to upload files to your EC2 instance. 
-2. You may SSH into your EC2 instance and develop using your favorite terminal-based editor. 
-3. You can SSH into your EC2 instance using VSCode, developing in a remote VSCode session. [Here](https://code.visualstudio.com/docs/remote/ssh) is a helpful guide on SSH-ing through VSCode. Your VSCode SSH config
-file will probably look something like this:
-```
-Host [ec2-instance].compute-1.amazonaws.com
-  HostName [ec2-instance].compute-1.amazonaws.com
-  User ubuntu
-  IdentityFile "[rooted path to your .pem file]"
-```
-
-## Glossary  
-- File Descriptor(fd): An fd is an integer that represents an opened "file", except that the "file" here refers to the generic interface to IO(read/write data). 
-- Socket: Abstraction of a connection between 2 machines. This is an fd you use in your code to refer to the connection. You pass this fd to various functions to work with the socket.
-- Mininet: A simulated network with hosts, routers(switches), links, controllers. You will always work inside of the Mininet. 
-- Topology: The graph structure of the network.
-- Node: The nodes in the topology.
-- Link: The edges in the topology.
-- Path: The path consists of links to go from 1 node to another. 
-- Link bandwidth: A link's bandwidth means how many maximum data(bits) it can transfer per time period(s). This is a fixed number given in the topology. 
-- Link latency: A link's latency means how long does it take for 1 bit to go from 1 node to another. This is a fixed number given in the topology. 
-- Throughput: A measured value representing how many data you transferred over a fixed time period. This is not a fixed number and is measured.
-- Host(Mininet): Think of this like a computer with its own IP address, ethernet address, etc. All the mininet hosts share the same file system with the base machine, meaning you don't have to worry about copying files to the hosts.
-- Server: In the context of this project, the server is a mininet host you run iPerfer in server mode and listen to any connections.
-- Client: In the context of this project, the client is a mininet host you run iPerfer in client mode and connects to the server. 
-
+0. For C++, the AG is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
+1. We highly recommend that you set up some kind of remote development environment to interact with your virtual machine.
 
 ## Objective
 - Learn about socket programming: Learning how to send/receive data to/from other machines with sockets. You will do this for all later projects.
-- Get used to AWS: You will be developing and testing your code on remote machines for later projects. 
+- Get used to using the VM: This will be very useful for P4, which is a much more involved project.
 - Get used to Mininet: Learning basic things like how to enter a host, how to start the mininet with topology, etc.
 - Learn to measure basic properties of a network: Throughput and latency are important concepts you will need in measuring performance. Also learn to read a topology. 
 
 ## Overview
+
+This project is meant to be a toy project for you to get familiar with tools that are often used within the industry to write good software. Our goal with this project is two fold:
+
+Firstly, we want you to have the foundations for later projects. Perhaps more importantly, we want you to get familiar with tools that you will work with in the real world when solving real problems with programs you write.
+
+### CMake
+
+One tool that is very common in the real world, but is seldom taught in classes are build systems (of which CMake is one). Build systems allow you to declaratively specify what programs can be built, and what dependencies each program has within a codebase.
+
+For this project, you will be using CMake to build `iPerfer`. You will be using in external dependencies to both make your life easier, and to get used to working with other people's code. These dependencies are:
+1. `cxxopts`: No one likes dealing with `getopt.h`. `cxxopts` allows you to easily define and use command line arguments for your program.
+2. `spdlog`: Good logging is essential for real world programs. `spdlog` is a logging library that makes this easier.
+
+To show the value of these tools, imagine accepting an server/client config and port as arguments, and then logging that you're listening/sending to that port. With these tools, it's as simple as:
+
+```
+    cxxopts::Options options("iPerfer", "A simple network performance measurement tool");
+    options.add_options()
+        ("s, server", "Enable server", cxxopts::value<bool>())
+        ("p, port", "Port number to use", cxxopts::value<int>());
+
+    auto result = options.parse(argc, argv);
+
+    auto is_server = result["server"].as<bool>();
+    auto port = result["port"].as<int>();
+
+    spdlog::info("Setup complete! Server mode: {}. Listening/sending to port {}", is_server, port);
+```
+
+### iPerf
 
 [`iPerf`](https://iperf.fr/) is a common tool used to measure network bandwidth. It functions as a speed test tool for TCP, UDP, and SCTP. In this assignment, you will write your own version of this tool in C/C++ using sockets. You will then use your tools to measure the performance of virtual networks in Mininet and explain how link characteristics and multiplexing impact performance.
 
@@ -61,6 +73,7 @@ After completing this programming assignment, students should be able to:
 
 * Write applications that use sockets to transmit and receive data across a network
 * Explain how latency and throughput are impacted by link characteristics and multiplexing
+* Use build systems to manage external dependencies and build a functional program
 
 <a name="part1"></a>
 ## Part 1: Mininet Tutorial (Not Graded)`
@@ -108,10 +121,8 @@ At some points, the walkthrough will talk about software-defined networking (SDN
 
 Over the course of this assignment (and especially in Part 3) you may want to run 
 programs in multiple hosts at once using mininet (e.g. to run a client in one
-host and a server in another). Typically, if you had access to a display for the
-EC2 instance, you could simply start different terminals for each host in Mininet
-(through something like `xterm h1`). However, SSH-ing into EC2 creates some 
-limitations. The following shell tips may be useful:
+host and a server in another). To achieve this, you can simply start different terminals for each host in Mininet
+(through something like `xterm h1`). The following shell tips may be useful:
 
 - Use `>` to redirect output to a file. The following code will print the results
   of pinging h2 from h1 into `ping_h1_h2.txt`. 
@@ -131,9 +142,6 @@ limitations. The following shell tips may be useful:
   kill -9 [PID]
   ```
 
-Through these tips, you can run code in multiple hosts at once by sending
-processes to the background and redirecting output to appropriate files. 
-
 <a name="part2"></a>
 ## Part 2: Write `iPerfer`
 
@@ -145,6 +153,14 @@ When operating in client mode, `iPerfer` will send TCP packets to a specific hos
 
 > **NOTE:** When measuring time, we highly recommend using `std::chrono::high_resolution_clock` for checking and computing passed time. From here, you can cast the time into milliseconds for more accurate time keeping.
 
+### Setup
+
+To setup the build system, you must complete the `CMakeLists.txt` files under the `cpp/` directory. We have already completed `cpp/CMakeLists.txt` for you. You should fill in `cpp/src/CMakeLists.txt` to compile a program called iPerfer. We have included the code to link the external dependencies as a comment in this file.
+
+The basics section of "An Introduction to Modern CMake" should be more than sufficient to get you through this part, and can be found [here](https://cliutils.gitlab.io/modern-cmake/chapters/basics.html).
+
+To build your CMake program, you *can* use the command line, but we recommend that you use IDE tools instead. For VSCode, this is pretty easy. Simply install the "CMake Tools" extension. Then, open the command pallette, and run "CMake: Configure" (select "Unspecified" if it asks you what kit to use). This will let you get Intellisense (autocomplete) on external dependencies. Then, to run the program, in the command pallette, hit "CMake: Build". This will build your project. Then, you can use a `launch.json` or your preferred way of running a binary to debug your program.
+
 ### Server Mode
 
 To operate `iPerfer` in server mode, it should be invoked as follows:
@@ -153,8 +169,6 @@ To operate `iPerfer` in server mode, it should be invoked as follows:
 
 * `-s` indicates this is the `iPerfer` server which should consume data
 * `listen_port` is the port on which the host is waiting to consume data; the port should be in the range `1024 ≤ listen_port ≤ 65535`
-
-> For simplicity, you can assume these arguments will appear exactly in the order listed above.
 
 You can use the presence of the `-s` option to determine `iPerfer` should operate in server mode.
 
@@ -215,12 +229,15 @@ If both the port and time argument are invalid, print only the port error messag
 
 When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible(just use a loop) for `time` seconds(hint: use `std::chrono::high_resolution_clock` or `time.h`). Data should be sent in chunks of 1000 bytes and the data should be all zeros(note: this is the char `'\0'`(0), not the char `'0'`(48)). Keep a running total of the number of bytes sent. After the client finishes sending its data, it should send a FIN message and wait for an acknowledgement before exiting the program. (hint: if your client/server is stuck here, try `shutdown(sockfd,SHUT_WR);`(no more transmission) after client finishes sending FIN) 
 
-`iPerfer` client must print a one-line summary in the following format:
+`iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 
 `Sent=X KB, Rate=Y Mbps`
 
 where X stands for the total number of bytes sent (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
+
+**This should be the only info log your program prints.** You are free to use `spdlog::debug` to output debug logs.
+
+Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline. You can use `spdlog` formatting arguments (e.g. `spdlog::info("{:.3f}", my_num)`) to achieve this.
 
 For example:
 `Sent=6543 KB, Rate=5.234 Mbps`
@@ -316,9 +333,27 @@ Finally, create a visualization of your custom topology (using circles to denote
 Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). 
 
 To submit:
-1. Make sure all the files you want to submit are in the same folder and you are able to compile your code with this flat file structure. **This includes the hand-graded files for Part 3 and Part 4 of the project.** 
-2. Go to autograder website specified above and submit you files. Ignore any errors about missing .c files.
-3. Please provide a Makefile that will produce an `iPerfer` executable when run with the command `make iperfer`.
+1. You will be submitting your projects using GitHub. In order to submit, create a **private** GitHub repo, and add eecs489staff@umich.edu as a collabarator. To the Autograder, only submit a `.aginfo` file that contains only a link to your GitHub repository. We will clone the **main** branch of your repository and use it in our grading.
+
+1. Ensure that when you run CMake and build all of the targets, your CMake configuration outputs a single program named `iPerfer` to the `build/bin` directory.
+
+1. For this project, submit your answers and explanations to GradeScope as PDF files containing all of the sections in `answers.txt`. Additionally, submit your topology picture and your program to GitHub as well.
+
+## Glossary  
+- File Descriptor(fd): An fd is an integer that represents an opened "file", except that the "file" here refers to the generic interface to IO(read/write data). 
+- Socket: Abstraction of a connection between 2 machines. This is an fd you use in your code to refer to the connection. You pass this fd to various functions to work with the socket.
+- Mininet: A simulated network with hosts, routers(switches), links, controllers. You will always work inside of the Mininet. 
+- Topology: The graph structure of the network.
+- Node: The nodes in the topology.
+- Link: The edges in the topology.
+- Path: The path consists of links to go from 1 node to another. 
+- Link bandwidth: A link's bandwidth means how many maximum data(bits) it can transfer per time period(s). This is a fixed number given in the topology. 
+- Link latency: A link's latency means how long does it take for 1 bit to go from 1 node to another. This is a fixed number given in the topology. 
+- Throughput: A measured value representing how many data you transferred over a fixed time period. This is not a fixed number and is measured.
+- Host(Mininet): Think of this like a computer with its own IP address, ethernet address, etc. All the mininet hosts share the same file system with the base machine, meaning you don't have to worry about copying files to the hosts.
+- Server: In the context of this project, the server is a mininet host you run iPerfer in server mode and listen to any connections.
+- Client: In the context of this project, the client is a mininet host you run iPerfer in client mode and connects to the server. 
+
 
 <!---Your assigned repository must contain:
 

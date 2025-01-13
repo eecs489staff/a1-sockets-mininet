@@ -1,9 +1,9 @@
-# Assignment 1: Sockets, Mininet, & Performance
+# Project 1: Sockets, Mininet, and Performance
 
 ### Due: January 29, 2025 (11:59 PM)
 
 In this project, you will create your own simplified version of [iPerf](https://iperf.fr/), a widely used network measurement tool. This project has the following goals:
-- Learn how to set up and use [Mininet](https://mininet.org/), a network emulation software that enables you to create custom network topologies and test your code all on a single machine. This will be used again in Project 4, and is a useful tool for Projects 2 and 3. 
+- Learn how to set up and use [Mininet](https://mininet.org/), a widely-used network emulation software that enables you to create custom network topologies and test your code all on a single machine. This will be used again in Project 4, and is a useful tool for Projects 2 and 3. 
 - Become familiar with programming with Linux [sockets](https://man7.org/linux/man-pages/man2/socket.2.html), which are essential for creating applications that involve network communication and will be used in all four projects. 
 - Develop an intuition for and understanding of key network performance characteristics (throughput and latency).
 - Become familiar with setting up a VM and using a build system (CMake), which are essential tools for both this class and software development in general. 
@@ -35,6 +35,8 @@ We have decided not to prescribe a certain virtual machine for you to use; you m
     1. You could use shared folders, which are typically configurable through VM settings. These can work really well, but can also be difficult to set up sometimes and may not work relaibly on your machine. 
     2. You can manually `scp` files from your local machine to the VM, similarly to how you `ssh` into the VM. 
     3. [Recommended] You can maintain a **private** GitHub repository of all your code and set up a GitHub authentication token in the VM to clone your repository inside the VM. This is pretty foolproof, though occaisionally annoying if you forget to pull. 
+
+> Note: Copy-pasting from/into the VM can be annoying! Not all VM software reliably supports a shared clipboard. To get around this, we recommend ssh-ing into your VM from your local machine, enabling you to use a local terminal to copy-paste. 
 
 > Note: We encourage you to use GitHub for code versioning and remote backups. Please make sure that any GitHub repository you create for your code in this class is **private**. Creating a public repository with your code, even if by accident, is considered a violation of the Honor Code. If you come across any public GitHub repositories with code for this project, please inform the instructors immediately. 
 
@@ -75,7 +77,7 @@ You may change the level depending on how much output you are interested in seei
 You are highly encouraged to use both `cxxopts` and `spdlog` to make your programs bug-free and easy to read. If you have other favorite tools that perform the same purpose, feel free to use those; however, the course staff will likely not be familiar with them and may not be able to help you. Please do not try to write your own command line input parser or use native `cout` statments for logging; we reserve the right to refuse to debug code that follows these [anti-patterns](https://en.wikipedia.org/wiki/Anti-pattern). 
 
 <a name="part1"></a>
-## Part 1: Mininet Tutorial (Not Graded)
+## Part 1: Mininet Tutorial
 
 Before you write or test `iPerfer`, you will learn how to use Mininet to create virtual networks and run simple experiments. According to the [Mininet website](http://mininet.org/), *Mininet creates a realistic virtual network, running real kernel, switch and application code, on a single machine (VM or native), in seconds, with a single command.* We will use Mininet in programming assignments throughout the semester. You should have installed Mininet as part of your VM setup in the previous part. 
 
@@ -116,7 +118,20 @@ $ net         // shows all network interfaces
 $ h1 ping h2  // run the [ping h2] command on h1
 $ h1 bash     // enter a terminal inside h1
 ```
-Once you run something like `$ h1 bash`, you will have a terminal inside of the emulated machine that is Host 1. You can then run any commands that Host 1 could run. In Mininet, all hosts have a shared filesystem. If you forget which host you are in, you can always run `ifconfig` to check your own IP address. 
+Once you run something like `$ h1 bash`, you will have a terminal inside of the emulated machine that is Host 1. You can then run any commands that Host 1 could run. In Mininet, all hosts have a shared filesystem. If you forget which host you are in, you can always run `ifconfig` to check your own IP address. Note that, within the host terminals, Mininet will not automatically replace other host names with their IP addresses; so something like 
+```
+$ ping h2         // NOTE: Inside h1 terminal
+```
+will not work, but 
+```
+$ ping 10.0.0.2   // NOTE: Inside h1 terminal
+```
+will work!
+
+If Mininet ever crashes or acts strange, use the following command to clean up Mininet before restarting it:
+```
+$ sudo mn -c
+```
 
 ### General Shell Tips with Mininet
 The following shell tips may be useful over the course of this project:
@@ -144,9 +159,9 @@ Over the course of this assignment (and especially in Part 3) you may want to ru
 programs in multiple hosts at once using Mininet (e.g. to run a client in one
 host and a server in another). Normally, if you are running a Linux machine with an actual display, 
 you can do something like `xterm h1 h2` to have separate terminals pop up for Host 1 and Host 2. Unfortunately, 
-when using a VM, this is a bit tricker. As such, you have several approaches you can take to run programs on multiple hosts concurrently:
+when using a VM, this is a bit tricker. There are several alternate approaches you can take to run programs on multiple hosts concurrently:
 
-#### Option 1: Use mnbash
+#### Option 1: Use mnbash (Recommended)
 To solve this problem, we've developed an `mnbash` command that you can use to run commands on multiple hosts.
 To use this, first run the following commands:
 ```
@@ -156,22 +171,50 @@ $ sudo chmod +x /usr/bin/mnbash
 This is a one-time setup; once you run these once on your VM, `mnbash` should always work. 
 
 To use this functionality, first ensure a Mininet topology is running (e.g. by running `sudo mn`) in your Linux VM. 
-Now, you can `ssh` into multiple terminals in the Linux VM and run commands on Mininet hosts by running something like
+Now, you can `ssh` multiple times into the Linux VM (once for each host you want to run something on) and run something like
 ```
-$ 
+$ mnbash h1
+```
+to open up a terminal for Host 1 in one of the terminals; similarly, you can run `$ mnbash h2` in another terminal at the same time, 
+and now you can easily run commands in multiple hosts at once!
+
+> Note: For the curious, each Mininet host is simply a different process running concurrently on one machine. This enables the shared filesystem; the illusion of these machines being separated by a network is created by having each process have a different network namespace. We take advantage of this to find the PID of a particular host in the `mnbash` script and open a terminal into that host. 
+
+#### Option 2: Use Python API (Optional but fun!)
+As you may have seen in `util/topology.py`, Mininet provides a Python API that makes it convenient and easy to run commands on 
+Mininet hosts directly from a Python script. Here are a few links to supplement your understanding of the Mininet Python API:
+
+- https://github.com/mininet/mininet/wiki/Introduction-to-Mininet#running
+- https://mininet.org/api/classmininet_1_1net_1_1Mininet.html
+- https://mininet.org/walkthrough/#part-4-python-api-examples
+
+A good starting point is to open up `util/topology.py`. In the main function, after `net.start()`, you can input the following lines of code:
+
+```
+h1 = net.get('h1')
+h1.cmd('ping -c 5 10.0.0.2 > latency.txt')
 ```
 
+Try it out and see what happens! You can use the Python API to make some of your measurement code in Part 4 easier; it can also make the process
+easily replicable, so you don't have to type in the same commands over and over again into your terminal if you mess up. 
 
-#### Option 2: Use Python API
-
-
-#### Option 3: Use background processes to do it natively
-
-
-
+#### Option 3: Use background processes to do it natively (Painful)
+The naive way to do this using just one terminal is to run commands in hosts as background processes (using `&` in the shell), allowing you to 
+run multiple processes at once from a single shell. This becomes tedious and unweildy very quickly, and we do not recommend it. 
 
 <a name="part2"></a>
-## Part 2: Write `iPerfer`
+## Part 2: Create a Custom Mininet Topology
+
+To familiarize yourself more with Mininet topologies, write Python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. You might find looking into the source code for `util/topology.py` particularly helpful; this script creates a network with the following topology:
+
+<img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in assignment1_topology.py" width="350" height="220"/>
+
+Once you've written the script, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts). You may either use illustration software (Google Drawings, Typst, Latex all work well) or draw this by hand, as long as the diagram is clear. The diagram should label each host and switch with the same name that you assign it in your Python script. 
+
+These deliverables should be stored in a `topology` folder at the top-level of your repository, named `<uniqname>_topology.py` and `<uniqname>_topology.png`. You can find further [submission instructions here](#submission-instr). 
+
+<a name="part3"></a>
+## Part 3: Write `iPerfer`
 
 In this portion of the assignment, you will write your own version of `iPerf` to measure network bandwidth. Your tool, called `iPerfer`, will send and receive TCP packets between a pair of hosts using sockets.
 
@@ -188,6 +231,16 @@ To setup the build system, you must complete the `CMakeLists.txt` files under th
 The basics section of "An Introduction to Modern CMake" should be more than sufficient to get you through this part, and can be found [here](https://cliutils.gitlab.io/modern-cmake/chapters/basics.html).
 
 To build your CMake program, you *can* use the command line, but we recommend that you use IDE tools instead. For VSCode, this is pretty easy. Simply install the "CMake Tools" extension. Then, open the command pallette, and run "CMake: Configure" (select "Unspecified" if it asks you what kit to use). This will let you get Intellisense (autocomplete) on external dependencies. Then, to run the program, in the command pallette, hit "CMake: Build". This will build your project. Then, you can use a `launch.json` or your preferred way of running a binary to debug your program.
+
+### Overview
+
+iPerfer will be able to operate in two modes: server mode and client mode.
+
+The basic workings of iPerfer is the following:
+
+1. A client connects to a server using TCP
+2. While a specificed time period has not elapsed, the client continually transmits chunks of 10 KB of data, **and waits until it knows that the server has received the data before transmitting the next chunk.** It is up to you on how to achieve the bolded part. This may seem relatively simple, but checking what `send()` actually returns (_hint: it does not wait until ACKs are received to return_) will help you understand why the above sentence is bolded. You are free to send data from the server to the client as long as it is a negligable amount of data.
+3. When the time has elapsed, the client waits until it receives confirmation that the last chunk of data that was sent has been received. Then, both the client and the server output the amount of data sent and the rate that estimated throughput allowed on the connection.
 
 ### Server Mode
 
@@ -208,9 +261,7 @@ If the listen port argument is less than 1024 or greater than 65535, you should 
 
 `Error: port number must be in the range of [1024, 65535]`
 
-When running as a server, `iPerfer` must listen for TCP connections from a client and receive data as quickly as possible. It should then wait for some kind of message from the client indicating it is done sending data (we will call this a **FIN** message). The server should then send the client an **acknowledgement** to this FIN message. It is up to you to decide the format of these FIN and acknowledgement messages.
-
-Data should be read in chunks of 1000 bytes. Keep a running total of the number of bytes received.
+When running as a server, `iPerfer` must use `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. It must then receive data as quickly as possible. Keep a running total of the number of bytes received.When the client stops sending data and closes the connection, it should gracefully handle this event.
 
 After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format:
 
@@ -235,11 +286,7 @@ To operate `iPerfer` in client mode, it should be invoked as follows:
 * `-c` indicates this is the `iPerfer` client which should generate data
 * `server_hostname` is the hostname or IP address of the `iPerfer` server which will consume data
 * `server_port` is the port on which the remote host is waiting to consume data; the port should be in the range 1024 ≤ `server_port` ≤ 65535
-* `time` is the duration in seconds for which data should be generated. We will only test this with an integer value (i.e feel free to use time.h)
-
-> For simplicity, you can assume these arguments will appear exactly in the order listed above.
-
-You can use the presence of the `-c` option to determine that `iPerfer` should operate in the client mode.
+* `time` is the duration in seconds for which data should be generated. This may be an integer or a decimal. You should use `cxxopts` and `std::chrono` to account for this.
 
 If any arguments are missing or extra arguments are provided, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
 
@@ -255,7 +302,7 @@ If the time argument ends up parsing to less than or equal to 0, you should prin
 
 If both the port and time argument are invalid, print only the port error message.
 
-When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible(just use a loop) for `time` seconds(hint: use `std::chrono::high_resolution_clock` or `time.h`). Data should be sent in chunks of 1000 bytes and the data should be all zeros(note: this is the char `'\0'`(0), not the char `'0'`(48)). Keep a running total of the number of bytes sent. After the client finishes sending its data, it should send a FIN message and wait for an acknowledgement before exiting the program. (hint: if your client/server is stuck here, try `shutdown(sockfd,SHUT_WR);`(no more transmission) after client finishes sending FIN) 
+When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible(just use a loop) for `time` seconds (hint: use `std::chrono::high_resolution_clock`). Data should be sent in chunks of 1000 bytes and the data should be all zeros(note: this is the char `'\0'`(0), not the char `'0'`(48)). Keep a running total of the number of bytes sent.
 
 `iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 
@@ -284,140 +331,111 @@ You should receive the same number of bytes on the server as you sent from the c
 
 The autograder will be released about halfway through the assignment. Instructions for submission are [here](#submission-instr). It is not meant to be your primary source of testing/debugging, but is rather intended for you to see your overall progress.
 
-<a name="part3"></a>
-## Part 3: Measurements in Mininet
+<a name="part4"></a>
+## Part 4: Measurements in Mininet
 
-For the third part of the assignment you will use the tool you wrote (`iPerfer`) and the standard latency measurement tool `ping` (`ping` measures RTT), to measure the bandwidth and latency in a virtual network in Mininet. You must include the output from some of your experiments and the answers to the questions below in your submission. Your answers to the questions should be put in the file `answers.txt` **that we provide**. Please do **NOT** change the format of the `answers.txt` file (none of the answers to the questions should take more than one or two sentences).
+For the fourth part of the assignment you will use the tool you wrote (`iPerfer`) and the standard latency measurement tool `ping`, to estimate the bandwidth and latency in a virtual network in Mininet. Read the `ping` man page to learn how to use it. Note that `ping` measures RTT, not one-way latency; to make things easier in this section, we will always report RTT instead of latency. 
 
-Read the `ping` man page to learn how to use it.
+> Note: If you are not confident your `iPerfer` is working correctly, feel free to use `iPerf` for measurements instead for this section. Output from either will be accepted. 
 
-A python script to run Mininet with the topology described below is provided [here](https://github.com/eecs489staff/a1-sockets-mininet/tree/main/starter_code) along with other files that you will find useful in completing this assignment.
+You must include the output from some of your experiments and the answers to the questions below in your submission, both in the Autograder and in Gradescope. Include answers to the questions in the provided `measurement/answers.txt` file. Do not modify the structure in any way; simply fill in the blanks and the explanations. 
 
-To run Mininet with the provided topology, run the Python script `assignment1_topology.py` using sudo:
+To run Mininet with the provided topology, run the Python script `util/topology.py`:
 
-`sudo python3 assignment1_topology.py`
+```
+sudo python3 util/topology.py
+```
 
 This will create a network with the following topology:
 
 <img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in assignment1_topology.py" width="350" height="220"/>
 
-If you have trouble launching the script, a common fix is to first try running `sudo mn -c`, and then try launching the script again. This will clear anything on Mininet at that point.
-
 Hosts (`h1` to `h10`) are represented by squares and switches (`s1` to `s6`) are represented by circles; the names in the diagram match the names of hosts and switches in Mininet. The hosts are assigned IP addresses 10.0.0.1 through 10.0.0.10; the last number in the IP address matches the host number.
 
-> **NOTE:** When running ping and `iPerfer` in Mininet, you must use IP addresses, not hostnames. Also, if you are not confident your `iPerfer` is working correctly, feel free to use `iperf` for any throughput measurements noted below. Output using either program will be accepted.
-
-### (Optional) Using the Mininet Python API instead of Command Line Interface (CLI) 
-For the following questions, you may find it easier to use the Mininet Python
-API to do measurements instead of typing commands in through the CLI, which can
-be clunky and error-prone. This is certainly not required, but may make your
-life easier. 
-
-Here are a few links to supplement your understanding of the Mininet Python API:
-- https://github.com/mininet/mininet/wiki/Introduction-to-Mininet#running
-- https://mininet.org/api/classmininet_1_1net_1_1Mininet.html
-- https://mininet.org/walkthrough/#part-4-python-api-examples 
-
-A good starting point is to open up `assignment1_topology.py`. In the `main`
-function, after `net.start()`, you can input the following lines of code:
-```
-h1 = net.get('h1')
-h1.cmd('ping -c 5 10.0.0.2 > latency.txt')
-```
-Try it out and see what happens!
-
 ### Q1: Link Latency and Throughput
-First, you should measure the RTT and bandwidth of each of the five individual links between switches (`L1` - `L5`). You should run ping with 20 packets and store the output of the measurement on each link in a file called `latency_L#.txt`, replacing # with the link number from the topology diagram above. You should run `iPerfer` for 20 seconds and store the output of the measurement on each link in a file called `throughput_L#.txt`, replacing # with the link number from the topology diagram above.
+First, you should measure the RTT and bandwidth of each of the five individual links between switches (`L1` - `L5`). You should run ping with 20 packets and store the output of the measurement on each link in a file called `latency_L#.txt`, replacing # with the link number from the topology diagram above. You should run `iPerfer` for 20 seconds and store the output of the measurement on each link in a file called `throughput_L#.txt`, replacing # with the link number from the topology diagram above. These should be stored under the `measurement/Q1/` directory. 
 
 ### Q2: Path Latency and Throughput
-Now, assume `h1` wants to communicate with `h10`. What is the expected latency and throughput of the path between the hosts? Put your prediction in the `answers.txt` file under question 2.
+Now, assume `h1` wants to communicate with `h10`. What is the expected RTT and throughput of the path between the hosts? Put your prediction in the `answers.txt` file under Q2.
 
-Measure the latency and throughput between `h1` and `h10` using `ping` and `iPerfer`. It does not matter which host is the client and which is the server. Use the same parameters as above (20 packets / 20 seconds) and store the output in files called `latency_Q2.txt` and `throughput_Q2.txt`. Put the average RTT and measured throughput in the `answers.txt` file and explain the results. If your prediction was wrong, explain why.
+Measure the RTT and throughput between `h1` and `h10` using `ping` and `iPerfer`. It does not matter which host is the client and which is the server. Use the same parameters as above (20 packets / 20 seconds) and store the output in files called `measurement/Q2/latency.txt` and `measurement/Q2/throughput.txt`. Put the average RTT and measured throughput in the `answers.txt` file and explain the results. If your prediction was wrong, explain why.
 
 ### Q3: Effects of Multiplexing
-Next, assume multiple hosts connected to `s1` want to simultaneously talk to hosts connected to `s6`. What is the expected latency and throughput when two pairs of hosts are communicating simultaneously? Put your predictions in your `answers.txt` file under question 3.1.
+Next, assume multiple hosts connected to `s1` want to simultaneously talk to hosts connected to `s6`. What is the expected RTT and throughput when two pairs of hosts are communicating simultaneously? Put your predictions in your `answers.txt` file under question 3.1.
 
-Use `ping` and `iPerfer` to measure the latency and throughput when there are two pairs of hosts communicating simultaneously; it does not matter which pairs of hosts are communicating as long as one is connected to `s1` and one is connected to `s6`. Use the same parameters as above. You do not need to submit the raw output, but you should put the average RTT and measured throughput for each pair in your `answers.txt` file under question 3.1 and explain the results. If your prediction was wrong, explain why.
+Use `ping` and `iPerfer` to measure the RTT and throughput when there are two pairs of hosts communicating simultaneously; it does not matter which pairs of hosts are communicating as long as one is connected to `s1` and one is connected to `s6`. Use the same parameters as above. You do not need to submit the raw output, but you should put the average RTT and measured throughput for each pair in your `answers.txt` file under question 3.1 and explain the results. If your prediction was wrong, explain why.
 
 Repeat for three pairs of hosts communicating simultaneously and put your answers in `answers.txt` under question 3.2. 
 
-Do not worry too much about starting the clients at the exact same time. As long as the connections overlap significantly, you should achieve the correct results. You can achieve approximately simultaneous testing while using iPerfer by starting the servers first (in the background), and having client commands prepared that you can paste quickly into your terminal. 
+Do not worry too much about starting the clients at the exact same time. As long as the connections overlap significantly, you should achieve the correct results. You can achieve approximately simultaneous testing while using iPerfer by starting the servers first, and having client commands prepared that you can paste quickly into your terminal(s). 
 
 ### Q4: Effects of Latency
-Lastly, assume `h1` wants to communicate with `h10` at the same time `h3` wants to communicate with `h8`. What is the expected latency and throughput for each pair? Put your prediction in your `answers.txt` file under question 4.
+Lastly, assume `h1` wants to communicate with `h10` at the same time `h3` wants to communicate with `h8`. What is the expected RTT and throughput for each pair? Put your prediction in your `answers.txt` file under question 4.
 
 Use `ping` and `iPerfer` to conduct measurements, storing the output in files called `latency_h1-h10.txt`, `latency_h3-h8.txt`, `throughput_h1-h10.txt`, and `throughput_h3-h8.txt`. Put the average RTT and measured throughput in your `answers.txt` file and explain the results. If your prediction was wrong, explain why.
 
-> **NOTE:** For the latency portions of `answers.txt`, make sure you are calculating the RTT for them. (The tools should report the RTT, as well)
-
-<a name="part4"></a>
-## Part 4: Create a Custom Topology
-For the last part of this assignment, write a python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. Save your python script as `<uniqname>_topology.py`. You might find looking into the source code for `assignment1_topology.py` particularly helpful. (Note: You will need a script that creates topologies for later homeworks) 
-
-Finally, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts) and save it as `<uniqname>_topology.png`. You may use any program or sketch to do this part. (We recommend [draw.io](https://app.diagrams.net/))
-
 <a name="submission-instr"></a>
 ## Submission Instructions
-Submission to the autograder will be done [here](https://g489.eecs.umich.edu/). 
 
-To submit:
-1. You will be submitting your projects using GitHub. In order to submit, create a **private** GitHub repo, and add eecs489staff@umich.edu as a collabarator. To the Autograder, only submit a `.aginfo` file that contains only a link to your GitHub repository. We will clone the **main** branch of your repository and use it in our grading.
+Your submission will be in two parts; the first part will be submitted to the Autograder [here](https://g489.eecs.umich.edu/). The second part will be submitted to [Gradescope](https://gradescope.com); you should have already been added to an EECS 489 class here. 
 
-1. Ensure that when you run CMake and build all of the targets, your CMake configuration outputs a single program named `iPerfer` to the `build/bin` directory.
-
-1. For this project, submit your answers and explanations to GradeScope as PDF files containing all of the sections in `answers.txt`. Additionally, submit your topology picture and your program to GitHub as well.
-
-## Autograder
-
-The autograder tests the following aspects of `iPerfer`
-1. Incorrect argument handling
-2. Format of your iPerfer output
-3. Correctness of iPerfer output (both the `Sent` and `Received` values as well as `Rate`).
-
-Because of the guarantees of TCP, both Sent and Received should be the same. The `Rate` is tested by first running `iperf` over a link, then comparing your `iPerfer` output to the result given a reasonable margin of error.
-
-<!---Your assigned repository must contain:
-
-* The source code for `iPerfer`: all source files for `iPerfer` should be in a folder called `iPerfer`; the folder should include a `Makefile` to compile the sources. The autograder expects an `iPerfer` executable to be present after running `make` in this directory. The autograder will run `make clean` then `make` (must support both), if either do not work the submission will fail.
-* Your measurement results and answers to the questions from Part 3: all results and a text file called `answers.txt` should be in a folder called `measurements`.
-* Your custom network topology code and its visualization (`<uniqname>_topology.py` and `<uniqname>_topology.png`).
-
-Example final structure of repository:
+### Directory Structure
+Your final directory structure should look like this:
 ```
-$ tree ./p1-joebb/
-./p1-joebb/
-├── README.md
-├── assignment1_topology.png
-├── assignment1_topology.py
-├── iPerfer
-│   ├── ** source files **
-│   ├── Makefile <- supports "make clean" and "make"
-│   └── iPerfer <- executable from running make
-├── joebb_topology.png
-├── joebb_topology.py
-└── measurements
-    ├── answers.txt
-    ├── latency_L1.txt
-    ├── latency_L2.txt
-    ├── latency_L3.txt
-    ├── latency_L4.txt
-    ├── latency_L5.txt
-    ├── latency_Q2.txt
-    ├── latency_h1-h10.txt
-    ├── latency_h3-h8.txt
-    ├── throughput_L1.txt
-    ├── throughput_L2.txt
-    ├── throughput_L3.txt
-    ├── throughput_L4.txt
-    ├── throughput_L5.txt
-    ├── throughput_Q2.txt
-    ├── throughput_h3-h8.txt
-    └── throughput_h1-h10.txt
+cpp/
+    CMakeLists.txt
+    src/
+        CMakeLists.txt
+        ** code file(s) **
+util/
+    create_submission.sh
+    mnbash
+    topology.py
+    ** any additional scripts you use **
+topology/
+    <uniqname>_topology.png
+    <uniqname>_topology.py
+measurement/
+    answers.txt
+    Q1/
+        latency_L1.txt
+        latency_L2.txt
+        latency_L3.txt
+        latency_L4.txt
+        latency_L5.txt
+        throughput_L1.txt
+        throughput_L2.txt
+        throughput_L3.txt
+        throughput_L4.txt
+        throughput_L5.txt
+    Q2/
+        latency.txt
+        throughput.txt
+    Q4/
+        latency_h1_h10.txt
+        throughput_h1_h10.txt
+        latency_h3_h8.txt
+        throughput_h3_h8.txt
 ```
 
+### Autograder Submission
+To submit, run 
+```
+util/create_submission.sh . 
+```
+from the root of your project repository. This will create a `submit.tar` file that you can submit to the Autograder. If you encounter a permission denied error, make sure that the script has execution privileges by running `$ sudo chmod +x util/create_submission.sh`. 
 
-When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
---->
+You are allowed three submissions per day. **There are no late days for Project 1**. 
+
+Ensure that when you run CMake and build all of the targets, your CMake configuration outputs a single program named `iPerfer` to the `build/bin` directory (located at the root-level of your project). 
+
+### Gradescope Submission
+Submit a PDF to Gradescope that contains:
+1. The diagram of your custom topology
+2. The Python script to run your custom topology (this can be an image, but it should be easily readable). 
+3. Answers copy-pasted from `answers.txt`. 
+
+The deadline for Gradescope submission is the same as the Autograder deadline. 
 
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 

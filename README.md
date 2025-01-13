@@ -235,11 +235,11 @@ $$\text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}.$$
 
 For instance, if you are sending 25 Mb (megabits, notice the lowercase "b") of data over a 5 Mbps (megabits per second) link, the transmission delay is $25 Mb/5 Mbps = 5s$. We can rearrange this equation to find that 
 
-$ \text{Bandwidth} = \frac{\text{Data Size}}{\text{Transmission Delay}} $. 
+$$\text{Bandwidth} = \frac{\text{Data Size}}{\text{Transmission Delay}}.$$
 
 We cannot directly measure the transmission delay. However, we can measure the total time taken to send a large packet and receive a small acknowledgement (ACK) back. As the transmission delay for the ACK is negligible, the total time elapsed from starting to send the initial packet to receiving the ACK is
 
-$ \text{Total Time} = \text{Transmission Delay} + \text{Forward Propagation Delay} + \text{Backward Propagation Delay}$. 
+$$\text{Total Time} = \text{Transmission Delay} + \text{Forward Propagation Delay} + \text{Backward Propagation Delay}.$$ 
 
 The two propagation delays added together is also called the Roundtrip Time (RTT), and is easy to measure! We simply send a small packet and receive a small response; as the transmission delays are negligible (due to small data size), this time is dominated by the propagation delays, and estimates the RTT. Once we have this estimate of the RTT, we can use it to calculate the transmission delay. We will use this principle to estimate the bandwidth in iPerfer. 
 

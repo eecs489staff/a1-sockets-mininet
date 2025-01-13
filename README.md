@@ -1,44 +1,44 @@
 # Assignment 1: Sockets, Mininet, & Performance
 
-### Due: Sep 18, 2024, 11:59 PM
+### Due: January 29, 2025 (11:59 PM)
 
-## Setting Up Your VM
+In this project, you will create your own simplified version of [iPerf](https://iperf.fr/), a widely used network measurement tool. This project has the following goals:
+- Learn how to set up and use [Mininet](https://mininet.org/), a network emulation software that enables you to create custom network topologies and test your code all on a single machine. This will be used again in Project 4, and is a useful tool for Projects 2 and 3. 
+- Become familiar with programming with Linux [sockets](https://man7.org/linux/man-pages/man2/socket.2.html), which are essential for creating applications that involve network communication and will be used in all four projects. 
+- Develop an intuition for and understanding of key network performance characteristics (throughput and latency).
+- Become familiar with setting up a VM and using a build system (CMake), which are essential tools for both this class and software development in general. 
+
+This project is divided into the following parts:
+* [Part 0](#part0): VM and Dev Environment Setup
+* [Part 1](#part1): Mininet Tutorial
+* [Part 2](#part2): Custom Mininet Topology
+* [Part 3](#part3): `iPerfer`
+* [Part 4](#part4): Mininet Measurements
+
+You can find [submission instructions here](#submission-instr). The first two parts are ungraded; the last three have deliverable components. 
+
+<a name="part0"></a>
+## Part 0: Setting Up Your VM and Dev Environment
 
 For Projects 1 and 4, you will be using a virtual machine (VM) running Ubuntu Server 24.04. This is because we will be using Mininet (more about this later) to simulate different network topologies. In order to use Mininet, we need certain kernel features, which makes running a virtual machine a necessity.
 
 ### Finding a VM Software
 
-We have decided not to prescribe a certain virtual machine for you to use; you may use any VM of your choice. However, in our own experiences, we have found offerings by VMWare to work well. VMWare Workstation (for Windows) and VMWare Fusion Player (for both x86 and ARM Mac) are free for personal use and have worked well for us. However, you need not use them if you have other preferences.
+We have decided not to prescribe a certain virtual machine for you to use; you may use any VM of your choice. However, in our own experiences, we have found offerings by VMWare to work well. VMWare Workstation (for Windows) and VMWare Fusion Player (for both x86 and ARM Mac) are free for personal use and have worked well for us. However, you need not use them if you have other preferences. 
 
-*For clarity, Docker is not a VM software and will not work for this project.*
+**At this point in the spec, follow the instructions in `VM_Setup_Guide.pdf` to set up your virtual machine.**
 
-**At this point in the spec, follow the instructions in `489 VM Setup.pdf` to set up your virtual machine.**
+### Development Tips
+1. The Autograder is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
+2. We highly recommend that you set up some kind of remote development environment to interact with your virtual machine. This is covered in the setup guide; you can `ssh` into the VM to develop in there from an editor on your local machine. 
+3. You can use shared folders to easily share files between your local machine and VM; this can usually be configured through the VM settings, and you can find more about this online.
 
-## Development Tips
-There are a few choices for how to develop and test code for this project:
-
-0. For C++, the AG is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
-1. We highly recommend that you set up some kind of remote development environment to interact with your virtual machine.
-
-## Objective
-- Learn about socket programming: Learning how to send/receive data to/from other machines with sockets. You will do this for all later projects.
-- Get used to using the VM: This will be very useful for P4, which is a much more involved project.
-- Get used to Mininet: Learning basic things like how to enter a host, how to start the mininet with topology, etc.
-- Learn to measure basic properties of a network: Throughput and latency are important concepts you will need in measuring performance. Also learn to read a topology. 
-
-## Overview
-
-This project is meant to be a toy project for you to get familiar with tools that are often used within the industry to write good software. Our goal with this project is two fold:
-
-Firstly, we want you to have the foundations for later projects. Perhaps more importantly, we want you to get familiar with tools that you will work with in the real world when solving real problems with programs you write.
-
-### CMake
-
+### CMake and Useful Libraries
 One tool that is very common in the real world, but is seldom taught in classes are build systems (of which CMake is one). Build systems allow you to declaratively specify what programs can be built, and what dependencies each program has within a codebase.
 
 For this project, you will be using CMake to build `iPerfer`. You will be using in external dependencies to both make your life easier, and to get used to working with other people's code. These dependencies are:
 1. `cxxopts`: No one likes dealing with `getopt.h`. `cxxopts` allows you to easily define and use command line arguments for your program.
-2. `spdlog`: Good logging is essential for real world programs. `spdlog` is a logging library that makes this easier.
+2. `spdlog`: Good logging is essential for real world programs. `spdlog` is a logging library that makes this easier. The library provides several levels of logging; the three most commonly used levels are `error`, `info`, and `debug`. Setting a certain logging level prints all messages at that level or lower (e.g. `error` is the lowest and `debug` is the highest here). 
 
 To show the value of these tools, imagine accepting an server/client config and port as arguments, and then logging that you're listening/sending to that port. With these tools, it's as simple as:
 
@@ -53,55 +53,26 @@ To show the value of these tools, imagine accepting an server/client config and 
     auto is_server = result["server"].as<bool>();
     auto port = result["port"].as<int>();
 
+    spdlog::debug("About to check port number...")
+    if (port < 1024 || port > 0xFFFF) {
+      spdlog::error("Port number should be in interval [1024, 65535]; instead received {}", port); 
+      return; 
+    }
+
     spdlog::info("Setup complete! Server mode: {}. Listening/sending to port {}", is_server, port);
 ```
+As you can see, you can easily and cleanly combine error, debugging, and informational messages in your program. You can set the global logging level using
+```
+spdlog::set_level(spdlog::level::debug); 
+```
+You may change the level depending on how much output you are interested in seeing. 
 
-### iPerf
-
-[`iPerf`](https://iperf.fr/) is a common tool used to measure network bandwidth. It functions as a speed test tool for TCP, UDP, and SCTP. In this assignment, you will write your own version of this tool in C/C++ using sockets. You will then use your tools to measure the performance of virtual networks in Mininet and explain how link characteristics and multiplexing impact performance.
-
-* [Part 1](#part1): Mininet Tutorial (Not Graded)
-* [Part 2](#part2): Write `iPerfer`
-* [Part 3](#part3): Measurements in Mininet
-* [Part 4](#part4): Create a Custom Topology
-* [Submission Instructions](#submission-instr)
-* [Autograder](#autograder)
-
-<!--- Before you start doing anything with this project, however, please [register your github username with us](https://docs.google.com/forms/d/e/1FAIpQLSeQXMmYr_m7A9GPhSra4yguaS7PR3fw1QE7UIhsC0_KwwTdmg/viewform?usp=sharing) before 5p.m on Tuesday, Sep.5th. This is so that we can create a private repository for you to store your code and answers for this project. --->
-
-## Learning Outcomes
-
-After completing this programming assignment, students should be able to:
-
-* Write applications that use sockets to transmit and receive data across a network
-* Explain how latency and throughput are impacted by link characteristics and multiplexing
-* Use build systems to manage external dependencies and build a functional program
+You are highly encouraged to use both `cxxopts` and `spdlog` to make your programs bug-free and easy to read. If you have other favorite tools that perform the same purpose, feel free to use those; however, the course staff will likely not be familiar with them and may not be able to help you. Please do not try to write your own command line input parser or use native `cout` statments for logging; we reserve the right to refuse to debug code that follows these [anti-patterns](https://en.wikipedia.org/wiki/Anti-pattern). 
 
 <a name="part1"></a>
-## Part 1: Mininet Tutorial (Not Graded)`
+## Part 1: Mininet Tutorial (Not Graded)
 
-Before you write or test `iPerfer`, you will learn how to use Mininet to create virtual networks and run simple experiments. According to the [Mininet website](http://mininet.org/), *Mininet creates a realistic virtual network, running real kernel, switch and application code, on a single machine (VM or native), in seconds, with a single command.* We will use Mininet in programming assignments throughout the semester.
-
-### Running Mininet
-
-It is best advised to run Mininet in a virtual machine (VM) or on your own Linux machine. 
-
-<!---For the former, we will be using [VirtualBox](https://www.virtualbox.org/), which is a free and open-source hypervisor. Please download and install the latest version of VirtualBox.
-
-You will be using our VM image ([link here](https://drive.google.com/file/d/1G_VOCKQlMsEfzo0xkAtwNJtWNEKA3Wfr/view?usp=drive_link)) with Mininet 2.3 pre-installed. Please download and import the VM image into VirtualBox. To transfer files to/from your VM you can use the Shared Folder feature provided in VirtualBox. We will go over this in more detail in discussion.
---->
-
-<!--- >> ***Hints:*** Here is a [video tutorial](https://youtube.com/watch?v=apx88YDqgO4&si=fqbbjTgg2jv6jP24) on how to install UTM and import image for Mac M1/M2 chip. 
-
-
-> Here are some possible trouble shooting methods for using shared folder. 
-> 1.  Click on the “Device” tab, then select “Insert Guest Additions CD image”
->     Also in the “Device” tab, add the target host folder to “Shared folders”.
->     Restart the VM.
->     After that you may observe an external disk mounted on the guest os (named sf_{your shared folder name} in my case). 
-> 2. https://askubuntu.com/questions/1181438/virtualbox-6-0-14-shared-folder-doesnt-appear-in-media
-> 3. https://gist.github.com/estorgio/1d679f962e8209f8a9232f7593683265
-> 4. https://www.youtube.com/watch?v=N4C5CeYfntE. --->
+Before you write or test `iPerfer`, you will learn how to use Mininet to create virtual networks and run simple experiments. According to the [Mininet website](http://mininet.org/), *Mininet creates a realistic virtual network, running real kernel, switch and application code, on a single machine (VM or native), in seconds, with a single command.* We will use Mininet in programming assignments throughout the semester. You should have installed Mininet as part of your VM setup in the previous part. 
 
 ### Mininet Walkthrough
 
@@ -113,16 +84,41 @@ Once you have access to Mininet, you should complete the following sections of t
 
 At some points, the walkthrough will talk about software-defined networking (SDN) and OpenFlow. We will discuss these during the second half of the semester, so you do not need to understand what they mean right now; you just need to know how to run and interact with Mininet. We will review using Mininet in discussion as well.
 
-### Please check out [this post](https://edstem.org/us/courses/61627/discussion/5197510) on tips of using mininet. 
+> NOTE: You do not need to submit anything for this part of the assignment. This portion is meant to help your understanding for this and future assignments.
 
-> **NOTE:** You do not need to submit anything for this part of the assignment. This portion is meant to help your understanding for this and future assignments.
+### Useful Mininet Commands
+Below we've compiled a list of useful Mininet commands. Please refer to the official [Mininet documentation](mininet.org) for more information. These are also covered in the walkthrough. 
 
-### Note: Running Multiple Hosts at Once in Mininet
+To launch Mininet with the standard topology, simply run
+```
+$ sudo mn
+```
+Note that Mininet must always run as root (i.e. using `sudo`). You can also launch Mininet using the Python API; an example of this is found in the `topology/topology.py` file and more information can be found online. To launch Mininet with the Project 1 topology, you can run 
+```
+$ sudo python3 topology/topology.py
+```
+assuming you are currently in the root directory of the project. 
+
+Once you have launched Mininet, you will be inside the Mininet CLI. Your command line prompt should look like
+```
+mininet>
+```
+Here are some useful commands inside the Mininet CLI:
+```
+$ nodes       // shows all current nodes in the network
+$ dump        // shows all info about current topology
+$ net         // shows all network interfaces
+$ h1 ping h2  // run the [ping h2] command on h1
+$ h1 bash     // enter a terminal inside h1
+```
+Once you run something like `$ h1 bash`, you will have a terminal inside of the emulated machine that is Host 1. You can then run any commands that Host 1 could run. In Mininet, all hosts have a shared filesystem. If you forget which host you are in, you can always run `ifconfig` to check your own IP address. 
+
+### Running Multiple Hosts at Once in Mininet
 
 Over the course of this assignment (and especially in Part 3) you may want to run 
 programs in multiple hosts at once using mininet (e.g. to run a client in one
 host and a server in another). To achieve this, you can simply start different terminals for each host in Mininet
-(through something like `xterm h1`). The following shell tips may be useful:
+(through something like `xterm h1`). The following shell tips may also be useful:
 
 - Use `>` to redirect output to a file. The following code will print the results
   of pinging h2 from h1 into `ping_h1_h2.txt`. 
@@ -339,21 +335,14 @@ To submit:
 
 1. For this project, submit your answers and explanations to GradeScope as PDF files containing all of the sections in `answers.txt`. Additionally, submit your topology picture and your program to GitHub as well.
 
-## Glossary  
-- File Descriptor(fd): An fd is an integer that represents an opened "file", except that the "file" here refers to the generic interface to IO(read/write data). 
-- Socket: Abstraction of a connection between 2 machines. This is an fd you use in your code to refer to the connection. You pass this fd to various functions to work with the socket.
-- Mininet: A simulated network with hosts, routers(switches), links, controllers. You will always work inside of the Mininet. 
-- Topology: The graph structure of the network.
-- Node: The nodes in the topology.
-- Link: The edges in the topology.
-- Path: The path consists of links to go from 1 node to another. 
-- Link bandwidth: A link's bandwidth means how many maximum data(bits) it can transfer per time period(s). This is a fixed number given in the topology. 
-- Link latency: A link's latency means how long does it take for 1 bit to go from 1 node to another. This is a fixed number given in the topology. 
-- Throughput: A measured value representing how many data you transferred over a fixed time period. This is not a fixed number and is measured.
-- Host(Mininet): Think of this like a computer with its own IP address, ethernet address, etc. All the mininet hosts share the same file system with the base machine, meaning you don't have to worry about copying files to the hosts.
-- Server: In the context of this project, the server is a mininet host you run iPerfer in server mode and listen to any connections.
-- Client: In the context of this project, the client is a mininet host you run iPerfer in client mode and connects to the server. 
+## Autograder
 
+The autograder tests the following aspects of `iPerfer`
+1. Incorrect argument handling
+2. Format of your iPerfer output
+3. Correctness of iPerfer output (both the `Sent` and `Received` values as well as `Rate`).
+
+Because of the guarantees of TCP, both Sent and Received should be the same. The `Rate` is tested by first running `iperf` over a link, then comparing your `iPerfer` output to the result given a reasonable margin of error.
 
 <!---Your assigned repository must contain:
 
@@ -397,30 +386,6 @@ $ tree ./p1-joebb/
 
 When grading your assignment, we will **ONLY** pull from your assigned repository, and only look at commits before the deadline.
 --->
-<a name="autograder"></a>
-## Autograder
 
-The autograder tests the following aspects of `iPerfer`
-1. Incorrect argument handling
-2. Format of your iPerfer output
-3. Correctness of iPerfer output (both the `Sent` and `Received` values as well as `Rate`).
-
-Because of the guarantees of TCP, both Sent and Received should be the same. The `Rate` is tested by first running `iperf` over a link, then comparing your `iPerfer` output to the result given a reasonable margin of error.
-
-<!---Our autograder runs the following versions of gcc/g++, please make sure your code is compatible
-```
-$ gcc --version
-gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
-Copyright (C) 2017 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-$ g++ --version
-g++ (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
-Copyright (C) 2017 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-```
---->
 ## Acknowledgements
-This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks.
+This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 

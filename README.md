@@ -231,15 +231,15 @@ When operating in server mode, `iPerfer` will receive TCP packets (from the `iPe
 ### Background: Measuring Bandwidth
 When a packet is sent on a link from Host A to Host B, the total time that the packet takes is given by the Propagation Delay + Transmission Delay. Note we are ignoring any processing or queuing delays. The propagation delay is also called the latency, and measures the amount of time it takes a single unit of data to travel the length of the link. The transmission delay measures how long it takes to push all bytes of the packet onto the link; this is determined by the bandwidth. Specifically, the transmission delay is given by
 
-$ Transmission Delay = \frac{Data Size}{Bandwidth}. $ 
+$ \text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}. $ 
 
 For instance, if you are sending 25 Mb (megabits, notice the lowercase "b") of data over a 5 Mbps (megabits per second) link, the transmission delay is $25 Mb/5 Mbps = 5s$. We can rearrange this equation to find that 
 
-$ Bandwidth = \frac{Data Size}{Transmission Delay} $. 
+$ \text{Bandwidth} = \frac{\text{Data Size}}{\text{Transmission Delay}} $. 
 
 We cannot directly measure the transmission delay. However, we can measure the total time taken to send a large packet and receive a small acknowledgement (ACK) back. As the transmission delay for the ACK is negligible, the total time elapsed from starting to send the initial packet to receiving the ACK is
 
-$ Total Time = Transmission Delay + Forward Propagation Delay + Backward Propagation Delay $. 
+$ \text{Total Time} = \text{Transmission Delay} + \text{Forward Propagation Delay} + \text{Backward Propagation Delay}$. 
 
 The two propagation delays added together is also called the Roundtrip Time (RTT), and is easy to measure! We simply send a small packet and receive a small response; as the transmission delays are negligible (due to small data size), this time is dominated by the propagation delays, and estimates the RTT. Once we have this estimate of the RTT, we can use it to calculate the transmission delay. We will use this principle to estimate the bandwidth in iPerfer. 
 

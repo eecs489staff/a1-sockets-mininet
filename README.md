@@ -268,7 +268,7 @@ iPerfer will be able to operate in two modes: server mode and client mode. The w
     3. The `iPerfer` client and server both measure the RTT. 
 4. Estimate the RTT based on the last **four** RTT measurements on both the server and client (we exclude initial measurements due to potential delays due to one-time warm-up costs). 
 5. Loop until a given time period (specified on the command line) elapses:
-    1. The client transmits 8KB of data to the server. This should be all 0s -- this is the character '\0' (0), not '0' (48). 
+    1. The client transmits 80KB of data to the server. This should be all 0s -- this is the character '\0' (0), not '0' (48). 
     2. The server responds with a small (1-byte) ACK message to the client (this should be the character 'A' (65)). 
 6. The client and the server independently calculate the estimated throughput based on this transmission. 
     1. The client should use the time elapsed from when it begins sending the first byte of data to reception of the last acknowledgement to estimate throughput. 
@@ -335,7 +335,7 @@ If both the port and time argument are invalid, print only the port error messag
 
 When running as a client, `iPerfer` should first send the ten 1-byte packets to the server to estimate RTT, waiting for an ACK between each one. Once the RTT has been estimated, the server should start sending data for the duration specified by the `time` argument (note that the RTT estimation phase should not count as part of the time). 
 
-Data should be sent in chunks of 8KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 8KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
+Data should be sent in chunks of 80KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 8KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
 
 `iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 
@@ -361,6 +361,8 @@ The autograder will be released about halfway through the assignment. Instructio
 1. A capital 'B' refers to bytes; a lowercase 'b' refers to bits. For instance, $5 MB = 40 Mb$, as 1 byte = 8 bits. Due to convention, network bandwidth is usually measured in some sort of bits-per-second (e.g. megabits per second, gigabits per second). On the other hand, data size is typically measured in bytes (e.g. megabytes, kilobytes). 
 2. The prefixes *kilo*, *mega*, and *giga* refer to base-10 prefixes; to refer to base-2 prefixes, we would use *kibi*, *mebi*, *gibi*. 
 3. Pay attention to socket code! The send function does not necessarily send everything you ask it to; see the discussion code and the man page for details. 
+4. If you test your code on networks that have bandwidth/latency varying too much from the Mininet defaults (on the order of 10s of Mbps and 10s of ms of latency), 
+your bandwidth estimate may not be as accurate. 
 
 ### FAQ
 1. **Why don't we need to worry about dropped packets here?** Dropped packets are not a concern because we are using TCP sockets, which takes care of reliable, in-order packet delivery for us. We will learn how to implement our own reliable transport protocol in Project 3!

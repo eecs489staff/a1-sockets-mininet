@@ -6,6 +6,9 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 include(FetchContent)
 
+find_package(spdlog)
+find_package(cxxopts)
+
 if(NOT spdlog_FOUND)
     message(STATUS "Fetching spdlog")
     FetchContent_Declare(

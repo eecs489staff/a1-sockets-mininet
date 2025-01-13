@@ -231,7 +231,7 @@ When operating in server mode, `iPerfer` will receive TCP packets (from the `iPe
 ### Background: Measuring Bandwidth
 When a packet is sent on a link from Host A to Host B, the total time that the packet takes is given by the Propagation Delay + Transmission Delay. Note we are ignoring any processing or queuing delays. The propagation delay is also called the latency, and measures the amount of time it takes a single unit of data to travel the length of the link. The transmission delay measures how long it takes to push all bytes of the packet onto the link; this is determined by the bandwidth. Specifically, the transmission delay is given by
 
-$ \text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}. $ 
+$$\text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}.$$ 
 
 For instance, if you are sending 25 Mb (megabits, notice the lowercase "b") of data over a 5 Mbps (megabits per second) link, the transmission delay is $25 Mb/5 Mbps = 5s$. We can rearrange this equation to find that 
 

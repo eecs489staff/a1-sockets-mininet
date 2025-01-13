@@ -31,10 +31,9 @@ We have decided not to prescribe a certain virtual machine for you to use; you m
 ### Development Tips
 1. The Autograder is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
 2. We highly recommend that you set up some kind of remote development environment to interact with your virtual machine. This is covered in the setup guide; you can `ssh` into the VM to develop in there from an editor on your local machine. 
-3. To get your project files into the filesystem of the virtual machine, there are several options:
-    1. You could use shared folders, which are typically configurable through VM settings. These can work really well, but can also be difficult to set up sometimes and may not work relaibly on your machine. 
+3. To initially get your project files into the filesystem of the virtual machine, there are several options:
+    1. [Recommended] You can maintain a **private** GitHub repository of all your code and set up a GitHub authentication token in the VM to clone your repository inside the VM. 
     2. You can manually `scp` files from your local machine to the VM, similarly to how you `ssh` into the VM. 
-    3. [Recommended] You can maintain a **private** GitHub repository of all your code and set up a GitHub authentication token in the VM to clone your repository inside the VM. This is pretty foolproof, though occaisionally annoying if you forget to pull. 
 
 > Note: Copy-pasting from/into the VM can be annoying! Not all VM software reliably supports a shared clipboard. To get around this, we recommend ssh-ing into your VM from your local machine, enabling you to use a local terminal to copy-paste. 
 

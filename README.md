@@ -222,11 +222,26 @@ In this portion of the assignment, you will write your own version of `iPerf` to
 
 `iPerfer` can run in either *client mode* or *server mode*. 
 
-When operating in client mode, `iPerfer` will send TCP packets to a specific host (i.e. the `iPerfer` server) for a specified time window and track how much data was sent during that time frame. Using this data, it will calculate and display the estimated throughput based on how much data was sent in the elapsed time. 
+When operating in client mode, `iPerfer` will send TCP packets to a specific host (i.e. the `iPerfer` server) for a specified time window and track how much data was sent during that time frame. Using this data, it will calculate and display the estimated bandwidth based on how much data was sent in the elapsed time. 
 
-When operating in server mode, `iPerfer` will receive TCP packets (from the `iPerfer` client) and track how much data was received during the lifetime of a connection; it will calculate and display the bandwidth based on how much data was received and how much time elapsed during the connection.
+When operating in server mode, `iPerfer` will receive TCP packets (from the `iPerfer` client) and track how much data was received during the lifetime of a connection; it will calculate and display the estimated bandwidth based on how much data was received and how much time elapsed during the connection.
 
-> **NOTE:** When measuring time, we highly recommend using `std::chrono::high_resolution_clock` for checking and computing passed time. From here, you can cast the time into milliseconds for more accurate time keeping.
+> **NOTE:** When measuring time, we highly recommend using `std::chrono::high_resolution_clock` for checking and computing passed time. From here, you can cast the time into microseconds for more accurate time keeping.
+
+### Background: Measuring Bandwidth
+When a packet is sent on a link from Host A to Host B, the total time that the packet takes is given by the Propagation Delay + Transmission Delay. Note we are ignoring any processing or queuing delays. The propagation delay is also called the latency, and measures the amount of time it takes a single unit of data to travel the length of the link. The transmission delay measures how long it takes to push all bytes of the packet onto the link; this is determined by the bandwidth. Specifically, the transmission delay is given by
+
+$ Transmission Delay = \frac{Data Size}{Bandwidth}. $ 
+
+For instance, if you are sending 25 Mb (megabits, notice the lowercase "b") of data over a 5 Mbps (megabits per second) link, the transmission delay is $25 Mb/5 Mbps = 5s$. We can rearrange this equation to find that 
+
+$ Bandwidth = \frac{Data Size}{Transmission Delay} $. 
+
+We cannot directly measure the transmission delay. However, we can measure the total time taken to send a large packet and receive a small acknowledgement (ACK) back. As the transmission delay for the ACK is negligible, the total time elapsed from starting to send the initial packet to receiving the ACK is
+
+$ Total Time = Transmission Delay + Forward Propagation Delay + Backward Propagation Delay $. 
+
+The two propagation delays added together is also called the Roundtrip Time (RTT), and is easy to measure! We simply send a small packet and receive a small response; as the transmission delays are negligible (due to small data size), this time is dominated by the propagation delays, and estimates the RTT. Once we have this estimate of the RTT, we can use it to calculate the transmission delay. We will use this principle to estimate the bandwidth in iPerfer. 
 
 ### Setup
 
@@ -248,12 +263,17 @@ iPerfer will be able to operate in two modes: server mode and client mode. The w
 
 1. An `iPerfer` server is running. 
 2. An `iPerfer` client connects to an `iPerfer` server using TCP. 
-3. Over a given time period (specified on the command-line), the client continually transmits chunks of 1000 bytes of data as fast as possible. 
-4. Once the time period has elapsed, the client sends a FIN message to indicate that transmission is finished. 
-5. Once the server receives this FIN message, it sends an acknowledgement back to the client. 
+3. Loop 8 times:
+    1. The `iPerfer` client sends a small (1-byte) message to the `iPerfer` server (these should be the character 'M' (77)). 
+    2. The `iPerfer` server responds with a small (1-byte) message to the `iPerfer` client (these should be the character 'A' (65)). 
+    3. The `iPerfer` client and server both measure the RTT. 
+4. Estimate the RTT based on the last **four** RTT measurements on both the server and client (we exclude initial measurements due to potential delays due to one-time warm-up costs). 
+5. Loop until a given time period (specified on the command line) elapses:
+    1. The client transmits 8KB of data to the server. This should be all 0s -- this is the character '\0' (0), not '0' (48). 
+    2. The server responds with a small (1-byte) ACK message to the client (this should be the character 'A' (65)). 
 6. The client and the server independently calculate the estimated throughput based on this transmission. 
-    1. The client should use the time elapsed from when it begins sending the first byte of data to reception of the acknowledgement to estimate throughput. 
-    2. The server should use the time elapsed from when it receives the first byte of data to the reception of the FIN message to estimate throughput. 
+    1. The client should use the time elapsed from when it begins sending the first byte of data to reception of the last acknowledgement to estimate throughput. 
+    2. The server should use the time elapsed from when it receives the first byte of data to the sending of the last acknowledgement message to estimate throughput. 
 
 > **Note:** The server and the client may not agree on the estimated throughput, as they will have slightly different ideas about how much time has elapsed. However, both the server and the client should report the exact same number of bytes transmitted. 
 
@@ -274,17 +294,18 @@ If the server port argument is less than 1024 or greater than 65535, you should 
 
 `Error: port number must be in the range of [1024, 65535]`
 
-When running as a server, `iPerfer` must use the `info` level of `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. It must then receive data as quickly as possible. Keep a running total of the number of bytes received. 
+When running as a server, `iPerfer` must use the `info` level of `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. When a client connects, the server must print `Client connected` at the `info` level. 
 
-After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format:
+The server should respond to the first ten (1-byte) packets with 1-byte ACK packets. It should estimate RTT by measuring time elapsed between the sending of each ACK and the reception of the subsequent client packet. Note that this means the server will have nine measurements instead of ten. 
 
-`Received=X KB, Rate=Y Mbps`
+After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format using the `info` level of `spdlog`:
 
-where X stands for the total number of bytes received (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-Note X should be an integer and Y should be a decimal with **three digits** after the decimal mark. There are no characters after the `Mbps`, and there should be a newline.
+`Received=X KB, Rate=Y Mbps, RTT=Z ms`
+
+where X stands for the total number of bytes received (in kilobytes), Y stands for the rate at which traffic could be read in megabits per second (Mbps), and Z stands for the estimated RTT (in milliseconds). Note X and Z should be integers and Y should be a decimal with **three digits** after the decimal mark (e.g. `spdlog::info("{:.3f}", my_num)`). There are no characters after the `ms`, but there should be a newline.
 
 For example:
-`Received=6543 KB, Rate=5.234 Mbps`
+`Received=6543 KB, Rate=5.234 Mbps, RTT=20ms`
 
 The `iPerfer` server should shut down gracefully after it handles one connection from a client.
 
@@ -313,24 +334,20 @@ If the time argument ends up parsing to less than or equal to 0, you should prin
 
 If both the port and time argument are invalid, print only the port error message.
 
-When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible (just use a loop) for `time` seconds (hint: use `std::chrono::high_resolution_clock`). Data should be sent in chunks of 1000 bytes and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent.
+When running as a client, `iPerfer` should first send the ten 1-byte packets to the server to estimate RTT, waiting for an ACK between each one. Once the RTT has been estimated, the server should start sending data for the duration specified by the `time` argument (note that the RTT estimation phase should not count as part of the time). 
+
+Data should be sent in chunks of 8KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 8KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
 
 `iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 
-`Sent=X KB, Rate=Y Mbps`
+`Sent=X KB, Rate=Y Mbps, RTT=Z ms`
 
-where X stands for the total number of bytes sent (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-
-Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline. You can use `spdlog` formatting arguments (e.g. `spdlog::info("{:.3f}", my_num)`) to achieve this.
+where X stands for the total number of bytes received (in kilobytes), Y stands for the rate at which traffic could be read in megabits per second (Mbps), and Z stands for the estimated RTT (in milliseconds). Note X and Z should be integers and Y should be a decimal with **three digits** after the decimal mark (e.g. `spdlog::info("{:.3f}", my_num)`). There are no characters after the `ms`, but there should be a newline.
 
 For example:
-`Sent=6543 KB, Rate=5.234 Mbps`
-
-You should assume 1 kilobyte (KB) = 1000 bytes (B) and 1 megabyte (MB) = 1000 KB. As always, 1 byte (B) = 8 bits (b).
+`Sent=6543 KB, Rate=5.234 Mbps, RTT=20ms`
 
 > **NOTE:** When calculating the rate, **do not** use the `time` argument, rather measure the time elapsed from when the client first starts sending data to when it receives its acknowledgement message. Additionally, note that the throughput is in Kilobytes (KB) whereas the rate is in Megabits per second. (Mbps) Make sure your units are accurate to avoid losing points on the autograder.
-
-> **NOTE:** Your program may run for slightly longer than the `time` argument; this is because the socket `send` function returns when the bytes to send are copied into the kernel buffer, rather than when the bytes are actually sent. This means that, when you stop calling `send` at the end of your client sender loop, there are actually still some bytes left to be transmitted. However, since TCP kernel buffers default to reasonably small sizes (~80KB), this will cause a delay on the order of fractions of a second, as modern links typically transmit on the order of Mbps. You can check the size of your kernel buffer by running `$ cat /proc/sys/net/ipv4/tcp_wmem`; the middle number is the default size. You can make this more precise by using `setsockopt` to set the `SO_SNDBUF` field, which controls the kernel buffer for the TCP socket. 
 
 ### Testing
 
@@ -339,6 +356,16 @@ You can test `iPerfer` on any machines you have access to. However, be aware the
 The primary mode for testing should be using Mininet. You should complete [Part 1](#part1) of this assignment before attempting that.
 
 The autograder will be released about halfway through the assignment. Instructions for submission are [here](#submission-instr). It is not meant to be your primary source of testing/debugging, but is rather intended for you to see your overall progress. You are free to use `spdlog::debug` to output debug logs, but you should not output any `error` or `info` logs not specified in this specification. 
+
+### Tips
+
+1. A capital 'B' refers to bytes; a lowercase 'b' refers to bits. For instance, $5 MB = 40 Mb$, as 1 byte = 8 bits. Due to convention, network bandwidth is usually measured in some sort of bits-per-second (e.g. megabits per second, gigabits per second). On the other hand, data size is typically measured in bytes (e.g. megabytes, kilobytes). 
+2. The prefixes *kilo*, *mega*, and *giga* refer to base-10 prefixes; to refer to base-2 prefixes, we would use *kibi*, *mebi*, *gibi*. 
+3. Pay attention to socket code! The send function does not necessarily send everything you ask it to; see the discussion code and the man page for details. 
+
+### FAQ
+1. **Why don't we need to worry about dropped packets here?** Dropped packets are not a concern because we are using TCP sockets, which takes care of reliable, in-order packet delivery for us. We will learn how to implement our own reliable transport protocol in Project 3!
+2. [This section will be updated as questions arise]
 
 <a name="part4"></a>
 ## Part 4: Measurements in Mininet

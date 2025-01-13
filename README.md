@@ -31,7 +31,12 @@ We have decided not to prescribe a certain virtual machine for you to use; you m
 ### Development Tips
 1. The Autograder is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
 2. We highly recommend that you set up some kind of remote development environment to interact with your virtual machine. This is covered in the setup guide; you can `ssh` into the VM to develop in there from an editor on your local machine. 
-3. You can use shared folders to easily share files between your local machine and VM; this can usually be configured through the VM settings, and you can find more about this online.
+3. To get your project files into the filesystem of the virtual machine, there are several options:
+    1. You could use shared folders, which are typically configurable through VM settings. These can work really well, but can also be difficult to set up sometimes and may not work relaibly on your machine. 
+    2. You can manually `scp` files from your local machine to the VM, similarly to how you `ssh` into the VM. 
+    3. [Recommended] You can maintain a **private** GitHub repository of all your code and set up a GitHub authentication token in the VM to clone your repository inside the VM. This is pretty foolproof, though occaisionally annoying if you forget to pull. 
+
+> Note: We encourage you to use GitHub for code versioning and remote backups. Please make sure that any GitHub repository you create for your code in this class is **private**. Creating a public repository with your code, even if by accident, is considered a violation of the Honor Code. If you come across any public GitHub repositories with code for this project, please inform the instructors immediately. 
 
 ### CMake and Useful Libraries
 One tool that is very common in the real world, but is seldom taught in classes are build systems (of which CMake is one). Build systems allow you to declaratively specify what programs can be built, and what dependencies each program has within a codebase.
@@ -93,7 +98,7 @@ To launch Mininet with the standard topology, simply run
 ```
 $ sudo mn
 ```
-Note that Mininet must always run as root (i.e. using `sudo`). You can also launch Mininet using the Python API; an example of this is found in the `topology/topology.py` file and more information can be found online. To launch Mininet with the Project 1 topology, you can run 
+Note that Mininet must always run as root (i.e. using `sudo`). You can also launch Mininet using the Python API; an example of this is found in the `util/topology.py` file and more information can be found online. To launch Mininet with the Project 1 topology, you can run 
 ```
 $ sudo python3 topology/topology.py
 ```
@@ -113,12 +118,8 @@ $ h1 bash     // enter a terminal inside h1
 ```
 Once you run something like `$ h1 bash`, you will have a terminal inside of the emulated machine that is Host 1. You can then run any commands that Host 1 could run. In Mininet, all hosts have a shared filesystem. If you forget which host you are in, you can always run `ifconfig` to check your own IP address. 
 
-### Running Multiple Hosts at Once in Mininet
-
-Over the course of this assignment (and especially in Part 3) you may want to run 
-programs in multiple hosts at once using mininet (e.g. to run a client in one
-host and a server in another). To achieve this, you can simply start different terminals for each host in Mininet
-(through something like `xterm h1`). The following shell tips may also be useful:
+### General Shell Tips with Mininet
+The following shell tips may be useful over the course of this project:
 
 - Use `>` to redirect output to a file. The following code will print the results
   of pinging h2 from h1 into `ping_h1_h2.txt`. 
@@ -137,6 +138,37 @@ host and a server in another). To achieve this, you can simply start different t
   ```
   kill -9 [PID]
   ```
+
+### Running Multiple Hosts at Once in Mininet
+Over the course of this assignment (and especially in Part 3) you may want to run 
+programs in multiple hosts at once using Mininet (e.g. to run a client in one
+host and a server in another). Normally, if you are running a Linux machine with an actual display, 
+you can do something like `xterm h1 h2` to have separate terminals pop up for Host 1 and Host 2. Unfortunately, 
+when using a VM, this is a bit tricker. As such, you have several approaches you can take to run programs on multiple hosts concurrently:
+
+#### Option 1: Use mnbash
+To solve this problem, we've developed an `mnbash` command that you can use to run commands on multiple hosts.
+To use this, first run the following commands:
+```
+$ sudo cp util/mnbash /usr/bin/mnbash
+$ sudo chmod +x /usr/bin/mnbash
+```
+This is a one-time setup; once you run these once on your VM, `mnbash` should always work. 
+
+To use this functionality, first ensure a Mininet topology is running (e.g. by running `sudo mn`) in your Linux VM. 
+Now, you can `ssh` into multiple terminals in the Linux VM and run commands on Mininet hosts by running something like
+```
+$ 
+```
+
+
+#### Option 2: Use Python API
+
+
+#### Option 3: Use background processes to do it natively
+
+
+
 
 <a name="part2"></a>
 ## Part 2: Write `iPerfer`

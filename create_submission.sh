@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define commonly ignored files and directories
-IGNORED_FILES_AND_DIRS=(".git" ".vscode" "build" "__pycache__" ".DS_Store" "*.pyc" "*.pyo")
+IGNORED_FILES_AND_DIRS=(".git" ".vscode" ".idea" "build" "__pycache__" ".DS_Store" "*.pyc" "*.pyo" "submit.tar")
 
 # Check if a file or directory should be ignored
 should_ignore() {

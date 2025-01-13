@@ -102,7 +102,7 @@ $ sudo mn
 ```
 Note that Mininet must always run as root (i.e. using `sudo`). You can also launch Mininet using the Python API; an example of this is found in the `util/topology.py` file and more information can be found online. To launch Mininet with the Project 1 topology, you can run 
 ```
-$ sudo python3 topology/topology.py
+$ sudo python3 util/topology.py
 ```
 assuming you are currently in the root directory of the project. 
 
@@ -207,7 +207,7 @@ run multiple processes at once from a single shell. This becomes tedious and unw
 
 To familiarize yourself more with Mininet topologies, write Python script to create a custom network topology in Mininet that has at least 5 hosts and 5 switches. You might find looking into the source code for `util/topology.py` particularly helpful; this script creates a network with the following topology:
 
-<img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in assignment1_topology.py" width="350" height="220"/>
+<img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in util/topology.py" width="350" height="220"/>
 
 Once you've written the script, create a visualization of your custom topology (using circles to denote switches and squares to represent hosts). You may either use illustration software (Google Drawings, Typst, Latex all work well) or draw this by hand, as long as the diagram is clear. The diagram should label each host and switch with the same name that you assign it in your Python script. 
 
@@ -216,31 +216,46 @@ These deliverables should be stored in a `topology` folder at the top-level of y
 <a name="part3"></a>
 ## Part 3: Write `iPerfer`
 
-In this portion of the assignment, you will write your own version of `iPerf` to measure network bandwidth. Your tool, called `iPerfer`, will send and receive TCP packets between a pair of hosts using sockets.
+In this portion of the assignment, you will write your own version of `iPerf` to estimate the throughput between two hosts. Your tool, called `iPerfer`, will send and receive TCP packets between a pair of hosts using TCP sockets.
 
 > **NOTE:** You may refer to [Beej's Guide to Network Programming Using Internet Sockets](https://beej.us/guide/bgnet/html/) for socket programming. Discussion sections will also review the some of the basics.
 
-When operating in client mode, `iPerfer` will send TCP packets to a specific host for a specified time window and track how much data was sent during that time frame; it will calculate and display the bandwidth based on how much data was sent in the elapsed time. When operating in server mode, `iPerfer` will receive TCP packets and track how much data was received during the lifetime of a connection; it will calculate and display the bandwidth based on how much data was received and how much time elapsed during the connection.
+`iPerfer` can run in either *client mode* or *server mode*. 
+
+When operating in client mode, `iPerfer` will send TCP packets to a specific host (i.e. the `iPerfer` server) for a specified time window and track how much data was sent during that time frame. Using this data, it will calculate and display the estimated throughput based on how much data was sent in the elapsed time. 
+
+When operating in server mode, `iPerfer` will receive TCP packets (from the `iPerfer` client) and track how much data was received during the lifetime of a connection; it will calculate and display the bandwidth based on how much data was received and how much time elapsed during the connection.
 
 > **NOTE:** When measuring time, we highly recommend using `std::chrono::high_resolution_clock` for checking and computing passed time. From here, you can cast the time into milliseconds for more accurate time keeping.
 
 ### Setup
 
-To setup the build system, you must complete the `CMakeLists.txt` files under the `cpp/` directory. We have already completed `cpp/CMakeLists.txt` for you. You should fill in `cpp/src/CMakeLists.txt` to compile a program called iPerfer. We have included the code to link the external dependencies as a comment in this file.
+To setup the build system, you must complete the `CMakeLists.txt` files under the `cpp/` directory. We have already completed `cpp/CMakeLists.txt` for you. You should fill in `cpp/src/CMakeLists.txt` to compile a program called `iPerfer`. We have included the code to link the external dependencies as a comment in this file.The basics section of ["An Introduction to Modern CMake"](https://cliutils.gitlab.io/modern-cmake/chapters/basics.html) should be more than sufficient to get you through this part. 
 
-The basics section of "An Introduction to Modern CMake" should be more than sufficient to get you through this part, and can be found [here](https://cliutils.gitlab.io/modern-cmake/chapters/basics.html).
+To build your CMake program, you *can* use the command line, but we recommend that you use IDE tools instead. For VSCode, this is pretty easy. Simply install the "CMake Tools" extension. Then, open the command pallette, and run "CMake: Configure" (select "Unspecified" if it asks you what kit to use). This will let you get Intellisense (autocomplete) on external dependencies. Then, to run the program, in the command pallette, hit "CMake: Build". This will build your project, creating an executable in the `build/bin/` directory. 
 
-To build your CMake program, you *can* use the command line, but we recommend that you use IDE tools instead. For VSCode, this is pretty easy. Simply install the "CMake Tools" extension. Then, open the command pallette, and run "CMake: Configure" (select "Unspecified" if it asks you what kit to use). This will let you get Intellisense (autocomplete) on external dependencies. Then, to run the program, in the command pallette, hit "CMake: Build". This will build your project. Then, you can use a `launch.json` or your preferred way of running a binary to debug your program.
+If you would rather use the command line, follow these steps:
+```
+$ mkdir build
+$ cd build
+$ cmake ../cpp/
+$ make
+$ ./bin/iPerfer
+```
 
 ### Overview
+iPerfer will be able to operate in two modes: server mode and client mode. The workflow is the following:
 
-iPerfer will be able to operate in two modes: server mode and client mode.
+1. An `iPerfer` server is running. 
+2. An `iPerfer` client connects to an `iPerfer` server using TCP. 
+3. Over a given time period (specified on the command-line), the client continually transmits chunks of 1000 bytes of data as fast as possible. 
+4. Once the time period has elapsed, the client sends a FIN message to indicate that transmission is finished. 
+5. Once the server receives this FIN message, it sends an acknowledgement back to the client. 
+6. The client and the server independently calculate the estimated throughput based on this transmission. 
+    1. The client should use the time elapsed from when it begins sending the first byte of data to reception of the acknowledgement to estimate throughput. 
+    2. The server should use the time elapsed from when it receives the first byte of data to the reception of the FIN message to estimate throughput. 
 
-The basic workings of iPerfer is the following:
-
-1. A client connects to a server using TCP
-2. While a specificed time period has not elapsed, the client continually transmits chunks of 10 KB of data, **and waits until it knows that the server has received the data before transmitting the next chunk.** It is up to you on how to achieve the bolded part. This may seem relatively simple, but checking what `send()` actually returns (_hint: it does not wait until ACKs are received to return_) will help you understand why the above sentence is bolded. You are free to send data from the server to the client as long as it is a negligable amount of data.
-3. When the time has elapsed, the client waits until it receives confirmation that the last chunk of data that was sent has been received. Then, both the client and the server output the amount of data sent and the rate that estimated throughput allowed on the connection.
+> **Note:** The server and the client may not agree on the estimated throughput, as they will have slightly different ideas about how much time has elapsed. However, both the server and the client should report the exact same number of bytes transmitted. 
 
 ### Server Mode
 
@@ -253,15 +268,13 @@ To operate `iPerfer` in server mode, it should be invoked as follows:
 
 You can use the presence of the `-s` option to determine `iPerfer` should operate in server mode.
 
-If arguments are missing or extra arguments are provided, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
+If arguments are missing or extra arguments are provided, you should exit with a non-zero error code.
 
-`Error: missing or extra arguments`
-
-If the listen port argument is less than 1024 or greater than 65535, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
+If the server port argument is less than 1024 or greater than 65535, you should print the following as exactly specified using the `error` level of `spdlog` (with a newline after it) and exit with status code 1:
 
 `Error: port number must be in the range of [1024, 65535]`
 
-When running as a server, `iPerfer` must use `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. It must then receive data as quickly as possible. Keep a running total of the number of bytes received.When the client stops sending data and closes the connection, it should gracefully handle this event.
+When running as a server, `iPerfer` must use the `info` level of `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. It must then receive data as quickly as possible. Keep a running total of the number of bytes received. 
 
 After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format:
 
@@ -288,29 +301,25 @@ To operate `iPerfer` in client mode, it should be invoked as follows:
 * `server_port` is the port on which the remote host is waiting to consume data; the port should be in the range 1024 ≤ `server_port` ≤ 65535
 * `time` is the duration in seconds for which data should be generated. This may be an integer or a decimal. You should use `cxxopts` and `std::chrono` to account for this.
 
-If any arguments are missing or extra arguments are provided, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
+If any arguments are missing or extra arguments are provided, you should exit with a non-zero status code. 
 
-`Error: missing or extra arguments`
-
-If the server port argument is less than 1024 or greater than 65535, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
+If the server port argument is less than 1024 or greater than 65535, you should print the following as exactly specified using the `error` level of `spdlog` (with a newline after it) and exit with status code 1:
 
 `Error: port number must be in the range of [1024, 65535]`
 
-If the time argument ends up parsing to less than or equal to 0, you should print the following as exactly specified (with a newline after it) and exit with status code 1:
+If the time argument ends up parsing to less than or equal to 0, you should print the following as exactly specified using the `error` level of `spdlog` (with a newline after it) and exit with status code 1:
 
 `Error: time argument must be greater than 0`
 
 If both the port and time argument are invalid, print only the port error message.
 
-When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible(just use a loop) for `time` seconds (hint: use `std::chrono::high_resolution_clock`). Data should be sent in chunks of 1000 bytes and the data should be all zeros(note: this is the char `'\0'`(0), not the char `'0'`(48)). Keep a running total of the number of bytes sent.
+When running as a client, `iPerfer` must establish a TCP connection with the server and send data as quickly as possible (just use a loop) for `time` seconds (hint: use `std::chrono::high_resolution_clock`). Data should be sent in chunks of 1000 bytes and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent.
 
 `iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 
 `Sent=X KB, Rate=Y Mbps`
 
 where X stands for the total number of bytes sent (in kilobytes), and Y stands for the rate at which traffic could be read in megabits per second (Mbps).
-
-**This should be the only info log your program prints.** You are free to use `spdlog::debug` to output debug logs.
 
 Note X should be an integer and Y should be a decimal with three digits after the decimal mark. There are no characters after the `Mbps`, and there should be a newline. You can use `spdlog` formatting arguments (e.g. `spdlog::info("{:.3f}", my_num)`) to achieve this.
 
@@ -321,15 +330,15 @@ You should assume 1 kilobyte (KB) = 1000 bytes (B) and 1 megabyte (MB) = 1000 KB
 
 > **NOTE:** When calculating the rate, **do not** use the `time` argument, rather measure the time elapsed from when the client first starts sending data to when it receives its acknowledgement message. Additionally, note that the throughput is in Kilobytes (KB) whereas the rate is in Megabits per second. (Mbps) Make sure your units are accurate to avoid losing points on the autograder.
 
+> **NOTE:** Your program may run for slightly longer than the `time` argument; this is because the socket `send` function returns when the bytes to send are copied into the kernel buffer, rather than when the bytes are actually sent. This means that, when you stop calling `send` at the end of your client sender loop, there are actually still some bytes left to be transmitted. However, since TCP kernel buffers default to reasonably small sizes (~80KB), this will cause a delay on the order of fractions of a second, as modern links typically transmit on the order of Mbps. You can check the size of your kernel buffer by running `$ cat /proc/sys/net/ipv4/tcp_wmem`; the middle number is the default size. You can make this more precise by using `setsockopt` to set the `SO_SNDBUF` field, which controls the kernel buffer for the TCP socket. 
+
 ### Testing
 
 You can test `iPerfer` on any machines you have access to. However, be aware the certain ports may be blocked by firewalls on end hosts or in the network, so you may not be able to test your program on all hosts or in all networks.
 
-The primary mode for testing should be using Mininet. You should complete [Part 2](#part2) of this assignment before attempting that.
+The primary mode for testing should be using Mininet. You should complete [Part 1](#part1) of this assignment before attempting that.
 
-You should receive the same number of bytes on the server as you sent from the client. However, the timing on the server may not perfectly match the timing on the client. Hence, the bandwidth reported by client and server may be slightly different.
-
-The autograder will be released about halfway through the assignment. Instructions for submission are [here](#submission-instr). It is not meant to be your primary source of testing/debugging, but is rather intended for you to see your overall progress.
+The autograder will be released about halfway through the assignment. Instructions for submission are [here](#submission-instr). It is not meant to be your primary source of testing/debugging, but is rather intended for you to see your overall progress. You are free to use `spdlog::debug` to output debug logs, but you should not output any `error` or `info` logs not specified in this specification. 
 
 <a name="part4"></a>
 ## Part 4: Measurements in Mininet
@@ -348,7 +357,7 @@ sudo python3 util/topology.py
 
 This will create a network with the following topology:
 
-<img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in assignment1_topology.py" width="350" height="220"/>
+<img src="assignment1_topology.png" title="Assignment 1's topology" alt="Should be showing the topology described in util/topology.py" width="350" height="220"/>
 
 Hosts (`h1` to `h10`) are represented by squares and switches (`s1` to `s6`) are represented by circles; the names in the diagram match the names of hosts and switches in Mininet. The hosts are assigned IP addresses 10.0.0.1 through 10.0.0.10; the last number in the IP address matches the host number.
 

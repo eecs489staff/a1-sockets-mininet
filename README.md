@@ -335,7 +335,7 @@ If both the port and time argument are invalid, print only the port error messag
 
 When running as a client, `iPerfer` should first send the ten 1-byte packets to the server to estimate RTT, waiting for an ACK between each one. Once the RTT has been estimated, the server should start sending data for the duration specified by the `time` argument (note that the RTT estimation phase should not count as part of the time). 
 
-Data should be sent in chunks of 80KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 8KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
+Data should be sent in chunks of 80KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 80KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
 
 `iPerfer` client must log a one-line summary using `spdlog::info` in the following format:
 

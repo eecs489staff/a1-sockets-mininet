@@ -333,7 +333,7 @@ If the time argument ends up parsing to less than or equal to 0, you should prin
 
 If both the port and time argument are invalid, print only the port error message.
 
-When running as a client, `iPerfer` should first send the ten 1-byte packets to the server to estimate RTT, waiting for an ACK between each one. Once the RTT has been estimated, the client should start sending data for the duration specified by the `time` argument (note that the RTT estimation phase should not count as part of the time). 
+When running as a client, `iPerfer` should first send the eight 1-byte packets to the server to estimate RTT, waiting for an ACK between each one. Once the RTT has been estimated, the client should start sending data for the duration specified by the `time` argument (note that the RTT estimation phase should not count as part of the time). 
 
 Data should be sent in chunks of 80KB and the data should be all zeros (note: this is the char `'\0'`, not the char `'0'`). Keep a running total of the number of bytes sent. After each 80KB chunk is sent, the client should wait for a 1-byte ACK from the server before sending the next chunk. 
 

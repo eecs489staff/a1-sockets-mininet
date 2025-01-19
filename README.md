@@ -295,7 +295,7 @@ If the server port argument is less than 1024 or greater than 65535, you should 
 
 When running as a server, `iPerfer` must use the `info` level of `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. When a client connects, the server must print `Client connected` at the `info` level. 
 
-The server should respond to the first eight (1-byte) packets with 1-byte ACK packets. It should estimate RTT by measuring time elapsed between the sending of each ACK and the reception of the subsequent client packet. Note that this means the server will have nine measurements instead of ten. 
+The server should respond to the first eight (1-byte) packets with 1-byte ACK packets. It should estimate RTT by measuring time elapsed between the sending of each ACK and the reception of the subsequent client packet. Note that this means the server will have seven measurements instead of eight. 
 
 After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format using the `info` level of `spdlog`:
 

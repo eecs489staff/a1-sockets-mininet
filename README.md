@@ -484,6 +484,8 @@ We do not *explicitly* check that:
 - The data in the messages is exactly what is specified. We specify this to possibly make debugging easier, but we don't care (and it doesn't affect the final output). 
 - Your error messages when invalid or missing arguments exist are exactly what is specified. Once again, this is specified to make debugging easier. 
 
+The Autograder is new this semester; if you feel like you are failing some test cases for some reason other than your code being incorrect, please let us know by posting on Ed.   
+
 ### Gradescope Submission
 Submit a PDF to Gradescope that contains:
 1. The diagram of your custom topology

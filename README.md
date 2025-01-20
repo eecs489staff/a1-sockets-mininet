@@ -271,8 +271,10 @@ iPerfer will be able to operate in two modes: server mode and client mode. The w
     1. The client transmits 80KB of data to the server. This should be all 0s -- this is the character '\0' (0), not '0' (48). 
     2. The server responds with a small (1-byte) ACK message to the client (this should be the character 'A' (65)). 
 6. The client and the server independently calculate the estimated throughput based on this transmission. 
-    1. The client should use the time elapsed from when it begins sending the first byte of data to reception of the last acknowledgement to estimate throughput. 
-    2. The server should use the time elapsed from when it receives the first byte of data to the sending of the last acknowledgement message to estimate throughput. 
+    1. The client should use the time elapsed from when it begins sending the first byte of data (not including the RTT estimation) to reception of the last acknowledgement to estimate throughput. 
+    2. The server should use the time elapsed from after it receives the last byte of RTT measurement to the sending of the last acknowledgement message to estimate throughput. 
+
+> **Note:** You can use slightly different start/end times on the client/server if you would like, as long as your calculations are accurate overall. You may need to take into account any known differences in timing (e.g. if the client measures an RTT that the server does not) when estimating throughput. 
 
 > **Note:** The server and the client may not agree on the estimated throughput, as they will have slightly different ideas about how much time has elapsed. However, both the server and the client should report the exact same number of bytes transmitted. 
 
@@ -295,7 +297,7 @@ If the server port argument is less than 1024 or greater than 65535, you should 
 
 When running as a server, `iPerfer` must use the `info` level of `spdlog` to print `iPerfer server started` after it has started listening for TCP connections from a client. When a client connects, the server must print `Client connected` at the `info` level. 
 
-The server should respond to the first eight (1-byte) packets with 1-byte ACK packets. It should estimate RTT by measuring time elapsed between the sending of each ACK and the reception of the subsequent client packet. Note that this means the server will have seven measurements instead of eight. 
+The server should respond to the first eight (1-byte) packets with 1-byte ACK packets. It should estimate RTT by measuring time elapsed between the sending of each ACK and the reception of the subsequent client packet. Note that this means the server will have seven measurements instead of eight. The server will then begin listening for the 80KB client packets, ACKing each one. 
 
 After the client has closed the connection, `iPerfer` server must print a one-line summary in the following format using the `info` level of `spdlog`:
 
@@ -464,7 +466,25 @@ from the root of your project repository. This will create a `submit.tar` file t
 
 You are allowed three submissions per day. **There are no late days for Project 1**. 
 
-Ensure that when you run CMake and build all of the targets, your CMake configuration outputs a single program named `iPerfer` to the `build/bin` directory (located at the root-level of your project). 
+Ensure that when you run CMake and build all of the targets, your CMake configuration outputs a single program named `iPerfer` to the `build/bin` directory (located at the root-level of your project).
+
+The point of this project is to create a tool that can accurately measure network bandwidth. The protocol provided in the spec is useful (and we encourage you to implement it), but since this is not a standard protocol, we are not interested in you implementing it to exact specifications (note that this is different from future projects, where we will expect precision in implementing well-known protocols). As such, here are lists of things we do and do not check for this project:
+
+We check that:
+- `iPerfer` exits with a non-zero exit code if arguments are missing or incorrect.
+- The output of `iPerfer` containing the relevant statistics is well-formatted (this is mostly so we can parse it automatically). 
+- `iPerfer` measures the bandwidth and RTT on both the server-side and client-side accurately (within some tolerance). 
+- The reported number of bytes transmitted is consistent with the reported bandwidth and RTT. 
+- The `iPerfer` client runs for the amount of time specified on the command line. 
+- You follow our guidelines for printing in that any output that we do not specify you have is printed at the 
+
+We do not *explicitly* check that:
+- Your messages contain exactly as much data as we specify. The 80KB is an approximation of what we found works well. 
+- You have exactly eight 1-byte messages to measure RTT. Once again, this is something that works well for us. 
+- The data in the messages is exactly what is specified. We specify this to possibly make debugging easier, but we don't care (and it doesn't affect the final output). 
+- Your error messages when invalid or missing arguments exist are exactly what is specified. Once again, this is specified to make debugging easier. 
+
+The Autograder is new this semester; if you feel like you are failing some test cases for some reason other than your code being incorrect, please let us know by posting on Ed.   
 
 ### Gradescope Submission
 Submit a PDF to Gradescope that contains:

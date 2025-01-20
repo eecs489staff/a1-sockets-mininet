@@ -476,7 +476,6 @@ We check that:
 - `iPerfer` measures the bandwidth and RTT on both the server-side and client-side accurately (within some tolerance). 
 - The reported number of bytes transmitted is consistent with the reported bandwidth and RTT. 
 - The `iPerfer` client runs for the amount of time specified on the command line. 
-- You follow our guidelines for printing in that any output that we do not specify you have is printed at the 
 
 We do not *explicitly* check that:
 - Your messages contain exactly as much data as we specify. The 80KB is an approximation of what we found works well. 

@@ -26,7 +26,7 @@ For Projects 1 and 4, you will be using a virtual machine (VM) running Ubuntu Se
 
 We have decided not to prescribe a certain virtual machine for you to use; you may use any VM of your choice. However, in our own experiences, we have found offerings by VMWare to work well. VMWare Workstation (for Windows) and VMWare Fusion Player (for both x86 and ARM Mac) are free for personal use and have worked well for us. However, you need not use them if you have other preferences. 
 
-**At this point in the spec, follow the instructions in `VM_Setup_Guide.pdf` to set up your virtual machine.**
+**At this point in the spec, follow the instructions in [`VM_Setup_Guide.pdf`](VM_Setup_Guide.pdf) to set up your virtual machine.**
 
 ### Development Tips
 1. The Autograder is using C++23. Feel free to use whichever C++ features you would like that are included within the standard.
@@ -495,3 +495,4 @@ The deadline for Gradescope submission is the same as the Autograder deadline.
 
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 
+

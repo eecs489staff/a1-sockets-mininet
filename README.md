@@ -1,6 +1,6 @@
 # Project 1: Sockets, Mininet, and Performance
 
-### Due: January 29, 2025 (11:59 PM)
+### Due: September 19, 2025 (11:59 PM)
 
 In this project, you will create your own simplified version of [iPerf](https://iperf.fr/), a widely used network measurement tool. This project has the following goals:
 - Learn how to set up and use [Mininet](https://mininet.org/), a widely-used network emulation software that enables you to create custom network topologies and test your code all on a single machine. This will be used again in Project 4, and is a useful tool for Projects 2 and 3. 
@@ -495,4 +495,5 @@ The deadline for Gradescope submission is the same as the Autograder deadline.
 
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 
+
 

@@ -86,7 +86,7 @@ Once you have access to Mininet, you should complete the following sections of t
 
 * All of Part 1, except the section "Start Wireshark"
 * The first four sections of Part 2—"Run a Regression Test", "Changing Topology Size and Type", "Link variations", and "Adjustable Verbosity"
-* All of Part 3
+* All of Part 3, except for "XTerm Display"
 
 At some points, the walkthrough will talk about software-defined networking (SDN) and OpenFlow. We will discuss these during the second half of the semester, so you do not need to understand what they mean right now; you just need to know how to run and interact with Mininet. We will review using Mininet in discussion as well.
 
@@ -146,9 +146,13 @@ The following shell tips may be useful over the course of this project:
   ```
   $ h1 ping -c 5 10.0.0.2 > ping_h1_h2.txt &
   ``` 
-- Using `&` will typically cause the PID (process ID) of the background process
-  to be printed out. You can kill the process using this PID to make it stop 
-  using the following command:
+- Using `&` will run a process in the background. To find the name of the
+  PID (process ID), print the process status for any host or switch to see all the
+  running processes in the root network namespace:
+  ```
+  $ h1 ps -a
+  ```
+  You can kill the process using this PID to make it stop using the following command:
   ```
   kill -9 [PID]
   ```
@@ -495,5 +499,6 @@ The deadline for Gradescope submission is the same as the Autograder deadline.
 
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 
+
 
 

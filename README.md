@@ -234,15 +234,21 @@ When operating in server mode, `iPerfer` will receive TCP packets (from the `iPe
 ### Background: Measuring Bandwidth
 When a packet is sent on a link from Host A to Host B, the total time that the packet takes is given by the Propagation Delay + Transmission Delay. Note we are ignoring any processing or queuing delays. The propagation delay is also called the latency, and measures the amount of time it takes a single unit of data to travel the length of the link. The transmission delay measures how long it takes to push all bytes of the packet onto the link; this is determined by the bandwidth. Specifically, the transmission delay is given by
 
-$$\text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}.$$ 
+$$
+\text{Transmission Delay} = \frac{\text{Data Size}}{\text{Bandwidth}}.
+$$
 
 For instance, if you are sending 25 Mb (megabits, notice the lowercase "b") of data over a 5 Mbps (megabits per second) link, the transmission delay is $25 Mb/5 Mbps = 5s$. We can rearrange this equation to find that 
 
-$$\text{Bandwidth} = \frac{\text{Data Size}}{\text{Transmission Delay}}.$$
+$$
+\text{Bandwidth} = \frac{\text{Data Size}}{\text{Transmission Delay}}.
+$$
 
 We cannot directly measure the transmission delay. However, we can measure the total time taken to send a large packet and receive a small acknowledgement (ACK) back. As the transmission delay for the ACK is negligible, the total time elapsed from starting to send the initial packet to receiving the ACK is
 
-$$\text{Total Time} = \text{Transmission Delay} + \text{Forward Propagation Delay} + \text{Backward Propagation Delay}.$$ 
+$$
+\text{Total Time} = \text{Transmission Delay} + \text{Forward Propagation Delay} + \text{Backward Propagation Delay}.
+$$ 
 
 The two propagation delays added together is also called the Roundtrip Time (RTT), and is easy to measure! We simply send a small packet and receive a small response; as the transmission delays are negligible (due to small data size), this time is dominated by the propagation delays, and estimates the RTT. Once we have this estimate of the RTT, we can use it to calculate the transmission delay. We will use this principle to estimate the bandwidth in iPerfer. 
 
@@ -371,6 +377,8 @@ The autograder will be released about halfway through the assignment. Instructio
 your bandwidth estimate may not be as accurate. 
 
 ### FAQ
+Check out this list of commonly asked questions and answers from Ed last semester. [FAQ](P1_FAQ.md)
+
 1. **Why don't we need to worry about dropped packets here?** Dropped packets are not a concern because we are using TCP sockets, which takes care of reliable, in-order packet delivery for us. We will learn how to implement our own reliable transport protocol in Project 3!
 2. [This section will be updated as questions arise]
 

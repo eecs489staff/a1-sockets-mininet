@@ -59,7 +59,7 @@ To show the value of these tools, imagine accepting an server/client config and 
     auto is_server = result["server"].as<bool>();
     auto port = result["port"].as<int>();
 
-    spdlog::debug("About to check port number...")
+    spdlog::debug("About to check port number...");
     if (port < 1024 || port > 0xFFFF) {
       spdlog::error("Port number should be in interval [1024, 65535]; instead received {}", port); 
       return; 
@@ -507,6 +507,7 @@ The deadline for Gradescope submission is the same as the Autograder deadline.
 
 ## Acknowledgements
 This programming assignment is based on Aditya Akella's Assignment 1 from Wisconsin CS 640: Computer Networks and has been modified by several years of previous EECS 489 staff. 
+
 
 
 
